@@ -136,7 +136,6 @@ async function checkAllStreamers() {
         const promises = batch.map(async (streamer) => {
             try {
                 // استخدام وكيل مجاني لتجاوز حظر Kick
-                // هذا الرابط يجعل الطلب يبدو وكأنه من متصفحك وليس من سيرفر
                 const proxyUrl = `https://corsproxy.io/?https://kick.com/api/v1/channels/${streamer.username}`;
                 
                 const response = await fetch(proxyUrl);
@@ -160,7 +159,6 @@ async function checkAllStreamers() {
                     }
                 }
             } catch (e) {
-                // في حال الفشل، نعتبره أوفلاين مؤقتاً
                 console.log(`Failed to check ${streamer.username}:`, e);
                 updateCardUI(streamer, false, 0);
             }
@@ -172,6 +170,9 @@ async function checkAllStreamers() {
     document.getElementById('live-count').innerText = liveCounter;
     document.getElementById('total-viewers').innerText = totalViewersCount.toLocaleString();
     applyFilters();
+    
+    // 🔥 البحث عن التوب وتطبيقه بعد انتهاء الفحص 🔥
+    findAndHighlightTop();
 }
 
 // إنشاء البطاقة
@@ -212,6 +213,11 @@ function updateCardUI(s, isLive, viewers) {
     card.dataset.live = isLive ? "1" : "0";
     card.dataset.viewers = viewers;
 
+    // إزالة التاج والإطار الذهبي عند التحديث العادي
+    card.classList.remove('top-streamer-card');
+    const crown = card.querySelector('.crown-icon');
+    if(crown) crown.remove();
+
     if (isLive) {
         card.classList.add('online-card');
         card.classList.remove('offline-card');
@@ -239,6 +245,42 @@ function updateCardUI(s, isLive, viewers) {
         
         const vDiv = card.querySelector('.viewers');
         if(vDiv) vDiv.remove();
+    }
+}
+
+// =========================================================
+// 🔥 دالة البحث عن الستريمر التوب وتمييزه 🔥
+// =========================================================
+function findAndHighlightTop() {
+    const cards = Array.from(document.querySelectorAll('.card'));
+    let maxViewers = -1;
+    let topCard = null;
+
+    // البحث عن صاحب أعلى مشاهدات بين اللايف
+    cards.forEach(card => {
+        if(card.dataset.live === "1") {
+            const viewers = parseInt(card.dataset.viewers);
+            if(viewers > maxViewers) {
+                maxViewers = viewers;
+                topCard = card;
+            }
+        }
+    });
+
+    // تطبيق الستايل الذهبي على التوب
+    if(topCard && maxViewers > 0) {
+        topCard.classList.add('top-streamer-card');
+        
+        // إضافة أيقونة التاج بجانب الاسم
+        const nameHeader = topCard.querySelector('.streamer-info h3');
+        if(!nameHeader.querySelector('.crown-icon')) {
+             nameHeader.innerHTML += ` <span class="crown-icon">👑</span>`;
+        }
+
+        // تغيير الشارة إلى "الأكثر مشاهدة"
+        const badge = topCard.querySelector('.status-badge');
+        badge.className = 'status-badge status-top';
+        badge.innerHTML = 'الأكثر مشاهدة 👑';
     }
 }
 
@@ -305,6 +347,12 @@ function applyFilters() {
     });
     
     cards.sort((a, b) => {
+        // ترتيب التوب أولاً
+        const isTopA = a.classList.contains('top-streamer-card');
+        const isTopB = b.classList.contains('top-streamer-card');
+        if (isTopA && !isTopB) return -1;
+        if (!isTopA && isTopB) return 1;
+
         const liveA = parseInt(a.dataset.live);
         const liveB = parseInt(b.dataset.live);
         const viewA = parseInt(a.dataset.viewers);
