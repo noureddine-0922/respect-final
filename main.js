@@ -58,34 +58,52 @@ const streamersList = [
 let activeCategory = 'all';
 let activeStatus = 'all';
 
-// 2. التهيئة
+// التهيئة
 document.addEventListener('DOMContentLoaded', () => {
     createParticles();
     renderInitialCards();
     checkAllStreamers();
     setInterval(checkAllStreamers, 60000); // تحديث كل دقيقة
 
-    // شريط التحديث
+    // شريط التحديث المتغير (أخضر -> بنفسجي)
     let progress = 0;
+    let isPurpleMode = false;
+    const bar = document.getElementById('progress-bar');
+    if(bar) bar.style.backgroundColor = '#53fc18'; // البداية خضراء
+
     setInterval(() => {
         progress += (100 / 60);
-        if (progress > 100) progress = 0;
-        const bar = document.getElementById('progress-bar');
+        
+        if (progress > 100) {
+            progress = 0;
+            isPurpleMode = !isPurpleMode;
+            if (bar) {
+                // تغيير اللون عند اكتمال الدورة
+                bar.style.backgroundColor = isPurpleMode ? '#8a2be2' : '#53fc18';
+            }
+        }
+        
         if(bar) bar.style.width = `${progress}%`;
     }, 1000);
 });
 
-// 3. الخلفية
+// الخلفية المتحركة (شعار)
 function createParticles() {
     const container = document.getElementById('particles');
+    if(!container) return;
     const isMobile = window.innerWidth <= 768;
+    
     for (let i = 0; i < (isMobile ? 15 : 30); i++) {
         const p = document.createElement('div');
         p.className = 'particle';
-        const size = Math.random() * 4 + 2;
+        const size = Math.random() * 30 + 20; // حجم الشعار
         p.style.width = `${size}px`;
         p.style.height = `${size}px`;
-        p.style.background = `rgba(83, 252, 24, ${Math.random() * 0.3 + 0.1})`;
+        
+        // لا نحتاج لون خلفية هنا لأننا وضعنا صورة في CSS
+        // نغير الشفافية فقط
+        p.style.opacity = Math.random() * 0.5 + 0.1;
+        
         p.style.left = `${Math.random() * 100}%`;
         p.style.top = `${Math.random() * 100}%`;
         p.style.animation = `float ${Math.random() * 15 + 15}s linear infinite`;
@@ -94,7 +112,7 @@ function createParticles() {
     }
 }
 
-// 4. عرض البطاقات المبدئي
+// عرض البطاقات
 function renderInitialCards() {
     const grid = document.getElementById('streamer-grid');
     grid.innerHTML = '';
@@ -106,7 +124,7 @@ function renderInitialCards() {
     document.getElementById('total-streamers').innerText = streamersList.length;
 }
 
-// 5. المحرك (فحص الحالة)
+// المحرك
 async function checkAllStreamers() {
     const batchSize = 6;
     let liveCounter = 0;
@@ -116,7 +134,6 @@ async function checkAllStreamers() {
         const batch = streamersList.slice(i, i + batchSize);
         const promises = batch.map(async (streamer) => {
             try {
-                // البحث باستخدام الـ Backend Function
                 const response = await fetch(`/.netlify/functions/check?username=${streamer.username}`);
                 if(response.ok) {
                     const data = await response.json();
@@ -136,13 +153,12 @@ async function checkAllStreamers() {
         await new Promise(r => setTimeout(r, 500));
     }
     
-    // تحديث الأرقام
     document.getElementById('live-count').innerText = liveCounter;
     document.getElementById('total-viewers').innerText = totalViewersCount.toLocaleString();
-    applyFilters(); // إعادة ترتيب وفلترة بعد التحديث
+    applyFilters();
 }
 
-// 6. إنشاء وتحديث البطاقات
+// إنشاء البطاقة
 function createCardElement(s, isLive, viewers) {
     const card = document.createElement('div');
     card.className = `card ${isLive ? 'online-card' : 'offline-card'}`;
@@ -164,7 +180,7 @@ function createCardElement(s, isLive, viewers) {
         </div>
         <div class="card-footer">
             <div class="status-badge ${isLive ? 'status-on' : 'status-off'}">
-                <span class="dot">●</span> ${isLive ? 'LIVE' : 'OFFLINE'}
+                <span class="dot ${isLive ? '' : 'dot-red'}">●</span> ${isLive ? 'مباشر 🔥' : 'غير متصل'}
             </div>
             ${isLive ? `<div class="viewers"><i class="fa-solid fa-eye"></i> ${viewers.toLocaleString()}</div>` : ''}
         </div>
@@ -172,21 +188,22 @@ function createCardElement(s, isLive, viewers) {
     return card;
 }
 
+// تحديث الواجهة
 function updateCardUI(s, isLive, viewers) {
     const card = document.getElementById(`card-${s.username}`);
     if (!card) return;
 
-    // تحديث الداتا
     card.dataset.live = isLive ? "1" : "0";
     card.dataset.viewers = viewers;
 
-    // تحديث الكلاسات
     if (isLive) {
         card.classList.add('online-card');
         card.classList.remove('offline-card');
         card.querySelector('.streamer-img').classList.add('pulse');
-        card.querySelector('.status-badge').className = 'status-badge status-on';
-        card.querySelector('.status-badge').innerHTML = '<span class="dot">●</span> مباشر 🔥';
+        
+        const badge = card.querySelector('.status-badge');
+        badge.className = 'status-badge status-on';
+        badge.innerHTML = '<span class="dot">●</span> مباشر 🔥';
         
         let vDiv = card.querySelector('.viewers');
         if(!vDiv) {
@@ -199,19 +216,21 @@ function updateCardUI(s, isLive, viewers) {
         card.classList.remove('online-card');
         card.classList.add('offline-card');
         card.querySelector('.streamer-img').classList.remove('pulse');
-        card.querySelector('.status-badge').className = 'status-badge status-off';
-        card.querySelector('.status-badge').innerHTML = '<span class="dot">●</span> غير متصل';
+        
+        const badge = card.querySelector('.status-badge');
+        badge.className = 'status-badge status-off';
+        badge.innerHTML = '<span class="dot dot-red">●</span> غير متصل';
+        
         const vDiv = card.querySelector('.viewers');
         if(vDiv) vDiv.remove();
     }
 }
 
-// 7. منطق الفلاتر
+// الفلاتر
 function toggleDropdown() {
     document.getElementById('catDropdown').classList.toggle('show');
 }
 
-// إغلاق القائمة عند الضغط خارجها
 window.onclick = function(event) {
     if (!event.target.matches('.dropdown-btn') && !event.target.matches('.dropdown-btn *')) {
         var dropdowns = document.getElementsByClassName("dropdown-content");
@@ -225,20 +244,28 @@ window.onclick = function(event) {
 
 function filterCategory(cat) {
     activeCategory = cat.toLowerCase();
-    // تحديث نص الزر
     const btnText = document.querySelector('.dropdown-btn span');
-    if(cat === 'all') btnText.innerText = 'تصنيف الفئات';
-    else if(cat === 'police') btnText.innerText = 'الشرطة 👮‍♂️';
-    else if(cat === 'gangs') btnText.innerText = 'عصابات ⚔️';
-    else if(cat === 'citizen') btnText.innerText = 'مواطنين 🧍';
-    else btnText.innerText = cat;
     
+    // تحديث نص الزر حسب الفئة المختارة
+    const names = {
+        'all': 'تصنيف الفئات',
+        'police': 'الشرطة',
+        's.ops': 'قوات خاصة',
+        'gangs': 'عصابات',
+        'عائلة عبيد': 'عائلة عبيد',
+        'عصابة البلس': 'عصابة البلس',
+        'n.w.a': 'N.W.A',
+        'middle gang': 'Middle Gang',
+        'عصابة الشرق': 'عصابة الشرق',
+        'citizen': 'مواطنين'
+    };
+    
+    btnText.innerText = names[activeCategory] || cat;
     applyFilters();
 }
 
 function filterStatus(status, btn) {
     activeStatus = status;
-    // تحديث الأزرار
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     applyFilters();
@@ -264,15 +291,14 @@ function applyFilters() {
         }
     });
     
-    // إعادة الترتيب (اللايف دائماً فوق)
     cards.sort((a, b) => {
         const liveA = parseInt(a.dataset.live);
         const liveB = parseInt(b.dataset.live);
         const viewA = parseInt(a.dataset.viewers);
         const viewB = parseInt(b.dataset.viewers);
         
-        if (liveA !== liveB) return liveB - liveA; // اللايف أولاً
-        return viewB - viewA; // الأكثر مشاهدة أولاً
+        if (liveA !== liveB) return liveB - liveA;
+        return viewB - viewA;
     });
     
     cards.forEach(card => grid.appendChild(card));
