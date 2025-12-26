@@ -1,55 +1,75 @@
-const axios = require('axios');
+const fetch = require('node-fetch');
 
 exports.handler = async function(event, context) {
-    const { username } = event.queryStringParameters;
-
+    // 1. استلام اسم المستخدم وتجهيزه
+    let { username } = event.queryStringParameters;
+    
     if (!username) {
-        return { statusCode: 400, body: "Username required" };
+        return {
+            statusCode: 400,
+            headers: { "Access-Control-Allow-Origin": "*" },
+            body: JSON.stringify({ isLive: false, viewers: 0, error: "Missing username" })
+        };
     }
 
-    // رؤوس مخادعة
-    const config = {
-        headers: {
-            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1',
-            'Accept': 'application/json',
-            'Connection': 'keep-alive'
-        }
-    };
+    // تنظيف الاسم (حذف المسافات وتحويله لأحرف صغيرة)
+    username = username.trim().toLowerCase();
 
     try {
-        // 🔥 السر هنا: نستخدم رابط البحث بدلاً من رابط القناة
-        // رابط البحث نادراً ما يُحظر
-        const url = `https://kick.com/api/search/channel?q=${username}`;
-        
-        const response = await axios.get(url, config);
-        const data = response.data;
-        
-        let isLive = false;
-        let viewers = 0;
+        // 2. الاتصال برابط API الرسمي لـ Kick
+        // هذا الرابط يعطي بيانات دقيقة 100% (JSON)
+        const url = `https://kick.com/api/v1/channels/${username}`;
 
-        // البحث يعيد قائمة، نبحث عن الشخص الصحيح فيها
-        if (data && Array.isArray(data)) {
-            const target = data.find(u => u.slug.toLowerCase() === username.toLowerCase());
-            
-            if (target && target.livestream && target.livestream.is_live) {
-                isLive = true;
-                viewers = target.livestream.viewer_count;
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                // هيدر يوهم الموقع أننا متصفح حقيقي لتجنب الحظر
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "Accept": "application/json",
+                "Accept-Language": "en-US,en;q=0.9",
+                "Cache-Control": "no-cache"
             }
+        });
+
+        // 3. التحقق من حالة الاتصال
+        if (response.status === 404) {
+            return {
+                statusCode: 200,
+                headers: { "Access-Control-Allow-Origin": "*" },
+                body: JSON.stringify({ isLive: false, viewers: 0, error: "User not found" })
+            };
         }
 
+        if (!response.ok) {
+            throw new Error(`Kick API Error: ${response.status}`);
+        }
+
+        // 4. استخراج البيانات
+        const data = await response.json();
+
+        // 5. تحليل البيانات (livestream يكون null إذا كان أوفلاين)
+        const isLive = data.livestream !== null;
+        let viewers = 0;
+
+        if (isLive && data.livestream) {
+            viewers = data.livestream.viewer_count || 0;
+        }
+
+        // 6. إرجاع النتيجة للموقع
         return {
             statusCode: 200,
-            headers: {
-                "Access-Control-Allow-Origin": "*",
-                "Content-Type": "application/json"
+            headers: { 
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*" // للسماح للموقع بقراءة البيانات
             },
             body: JSON.stringify({ isLive, viewers })
         };
 
     } catch (error) {
-        console.log("Error:", error.message);
+        console.log("Error checking streamer:", error.message);
         return {
-            statusCode: 200,
+            statusCode: 200, // نرجع 200 عشان ما يعلق الموقع، بس نقول إنه أوفلاين
+            headers: { "Access-Control-Allow-Origin": "*" },
             body: JSON.stringify({ isLive: false, viewers: 0 })
         };
     }
