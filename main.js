@@ -1,5 +1,5 @@
 // ==========================================
-// 1. البيانات (تم تحديث الصور والأسماء)
+// 1. البيانات
 // ==========================================
 const streamersList = [
   { "id": 1, "name": "S5B", "icName": "ماثيو ستانلي", "username": "s5b", "image": "https://files.kick.com/images/user/5543715/profile_image/conversion/0f18fe5a-ccaf-4fc9-b6b4-fb6d953c7952-fullsize.webp", "category": "citizen" },
@@ -65,28 +65,23 @@ document.addEventListener('DOMContentLoaded', () => {
     checkAllStreamers();
     setInterval(checkAllStreamers, 60000); // تحديث كل دقيقة
 
-    // شريط التحديث المتغير (أخضر -> بنفسجي)
+    // شريط التحديث المتغير
     let progress = 0;
     let isPurpleMode = false;
     const bar = document.getElementById('progress-bar');
-    if(bar) bar.style.backgroundColor = '#53fc18'; // البداية خضراء
+    if(bar) bar.style.backgroundColor = '#53fc18'; 
 
     setInterval(() => {
         progress += (100 / 60);
-        
         if (progress > 100) {
             progress = 0;
             isPurpleMode = !isPurpleMode;
-            if (bar) {
-                // تغيير اللون عند اكتمال الدورة
-                bar.style.backgroundColor = isPurpleMode ? '#8a2be2' : '#53fc18';
-            }
+            if (bar) bar.style.backgroundColor = isPurpleMode ? '#8a2be2' : '#53fc18';
         }
-        
         if(bar) bar.style.width = `${progress}%`;
     }, 1000);
     
-    // شاشة التحميل الفنية
+    // إخفاء شاشة التحميل
     setTimeout(() => {
         const loader = document.getElementById('image-loader');
         if(loader) {
@@ -96,21 +91,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 4000);
 });
 
-// الخلفية المتحركة (شعار)
+// الخلفية
 function createParticles() {
     const container = document.getElementById('particles');
     if(!container) return;
     const isMobile = window.innerWidth <= 768;
-    
     for (let i = 0; i < (isMobile ? 15 : 30); i++) {
         const p = document.createElement('div');
         p.className = 'particle';
-        const size = Math.random() * 30 + 20; // حجم الشعار
+        const size = Math.random() * 30 + 20;
         p.style.width = `${size}px`;
         p.style.height = `${size}px`;
-        
         p.style.opacity = Math.random() * 0.5 + 0.1;
-        
         p.style.left = `${Math.random() * 100}%`;
         p.style.top = `${Math.random() * 100}%`;
         p.style.animation = `float ${Math.random() * 15 + 15}s linear infinite`;
@@ -131,7 +123,9 @@ function renderInitialCards() {
     document.getElementById('total-streamers').innerText = streamersList.length;
 }
 
-// المحرك
+// =========================================================
+// 🔥 المحرك الجديد (فحص من المتصفح باستخدام وكيل CORS) 🔥
+// =========================================================
 async function checkAllStreamers() {
     const batchSize = 6;
     let liveCounter = 0;
@@ -141,18 +135,33 @@ async function checkAllStreamers() {
         const batch = streamersList.slice(i, i + batchSize);
         const promises = batch.map(async (streamer) => {
             try {
-                const response = await fetch(`/.netlify/functions/check?username=${streamer.username}`);
+                // استخدام وكيل مجاني لتجاوز حظر Kick
+                // هذا الرابط يجعل الطلب يبدو وكأنه من متصفحك وليس من سيرفر
+                const proxyUrl = `https://corsproxy.io/?https://kick.com/api/v1/channels/${streamer.username}`;
+                
+                const response = await fetch(proxyUrl);
+                
                 if(response.ok) {
                     const data = await response.json();
-                    if (data.isLive) {
-                        updateCardUI(streamer, true, data.viewers);
+                    
+                    // تحليل بيانات Kick الرسمية
+                    const isLive = data.livestream !== null;
+                    let viewers = 0;
+                    if (isLive && data.livestream) {
+                        viewers = data.livestream.viewer_count || 0;
+                    }
+
+                    if (isLive) {
+                        updateCardUI(streamer, true, viewers);
                         liveCounter++;
-                        totalViewersCount += data.viewers;
+                        totalViewersCount += viewers;
                     } else {
                         updateCardUI(streamer, false, 0);
                     }
                 }
             } catch (e) {
+                // في حال الفشل، نعتبره أوفلاين مؤقتاً
+                console.log(`Failed to check ${streamer.username}:`, e);
                 updateCardUI(streamer, false, 0);
             }
         });
@@ -252,9 +261,7 @@ window.onclick = function(event) {
 function filterCategory(cat) {
     activeCategory = cat.toLowerCase();
     const btnText = document.querySelector('.dropdown-btn span');
-    
-    // تحديث نص الزر حسب الفئة المختارة
-   const names = {
+    const names = {
         'all': 'تصنيف الفئات',
         'police': 'الشرطة',
         's.ops': 'قوات خاصة',
@@ -266,7 +273,6 @@ function filterCategory(cat) {
         'عصابة الشرق': 'عصابة الشرق',
         'citizen': 'مواطنين'
     };
-    
     btnText.innerText = names[activeCategory] || cat;
     applyFilters();
 }
