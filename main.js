@@ -8,7 +8,7 @@ const streamersList = [
   { "id": 4, "name": "Drb7h", "icName": "كافح المكافح", "username": "drb7h", "image": "https://files.kick.com/images/user/4434632/profile_image/conversion/26516e13-f362-4f7d-8b16-f458b5414f3c-fullsize.webp", "category": "police" },
   { "id": 5, "name": "itsD70", "icName": "بوليلو", "username": "itsd70", "image": "https://files.kick.com/images/user/5950524/profile_image/conversion/acb54af5-efcb-4b5a-bcc5-e1824fe61676-fullsize.webp", "category": "gangs" },
   { "id": 6, "name": "aboali62", "icName": "علي عامر", "username": "aboali62", "image": "https://files.kick.com/images/user/50078315/profile_image/conversion/21a0677b-8092-4834-929f-9066ef4899f4-fullsize.webp", "category": "police" },
-  { "id": 7, "name": "i2Reap", "icName": "عبد الودود البرماوي", "username": "i2reap", "image": "https://files.kick.com/images/user/5796065/profile_image/conversion/99da65f7-625f-408b-bc85-4328a64d9bf4-fullsize.webp", "category": "citizen" },
+  { "id": 7, "name": "i2Reap", "icName": "عبد الودود البرماوي", "username": "i2reap", "image": "https://files.kick.com/images/user/1154012/profile_image/conversion/ceae6396-b57e-465c-9071-171e69d558ec-fullsize.webp", "category": "citizen" },
   { "id": 8, "name": "taf86", "icName": "صقر ال عبيد", "username": "taf86", "image": "https://files.kick.com/images/user/7364286/profile_image/conversion/474b770c-3110-4683-a732-8f9582b7de49-fullsize.webp", "category": "عائلة عبيد" },
   { "id": 9, "name": "taemor", "icName": "مصطفى سداح", "username": "taemor", "image": "https://files.kick.com/images/user/19779361/profile_image/conversion/2f0f0e7c-b58c-4ed5-a7ab-359ec1894320-fullsize.webp", "category": "عائلة الياكوزا" },
   { "id": 10, "name": "sayko_911", "icName": "حربي الزير", "username": "sayko_911", "image": "https://files.kick.com/images/user/16694172/profile_image/conversion/cbc3a87b-892f-40cb-a2f0-a4ef013425f6-fullsize.webp", "category": "عائلة الياكوزا" },
@@ -37,6 +37,16 @@ const streamersList = [
   { "id": 33, "name": "hook", "icName": "سيف ال عبيد", "username": "hook", "image": "https://files.kick.com/images/user/5665994/profile_image/conversion/550120fb-3de7-4a42-bccc-cc83b5760a81-fullsize.webp", "category": "عائلة عبيد" },
   { "id": 34, "name": "foxrex", "icName": "", "username": "foxrex", "image": "https://files.kick.com/images/user/33211413/profile_image/conversion/b289d671-59e2-48d6-b86a-14d1143a48b7-fullsize.webp", "category": "عصابة البلس" },
   { "id": 35, "name": "f1aisal", "icName": "عقاب المخلوط", "username": "f1aisal", "image": "https://files.kick.com/images/user/5684147/profile_image/conversion/8a0ac812-3ea6-4ef6-90ef-da27fe7d94ca-fullsize.webp", "category": "الشرطة" },
+  { "id": 36, "name": "drkaalo", "icName": "أبو جلمبو", "username": "drkaalo", "image": "https://files.kick.com/images/user/47831636/profile_image/conversion/7543a6e7-f8b3-498f-87e7-e5034672b837-fullsize.webp", "category": "Middle Gang" },
+  { "id": 37, "name": "al_hashidi", "icName": "سعيد الحاشدي", "username": "al_hashidi", "image": "https://files.kick.com/images/user/40611253/profile_image/conversion/0e2faea9-5e49-4e4c-b313-e10e7eaaa10e-fullsize.webp", "category": "العدل" },
+  { "id": 38, "name": "abokhaled_sa", "icName": "ذياب خلفان", "username": "abokhaled_sa", "image": "https://files.kick.com/images/user/6112408/profile_image/conversion/f4ac7373-aee8-4bbd-95aa-494af2454654-fullsize.webp", "category": "الشرطة" },
+  { "id": 39, "name": "abdalluh124", "icName": "", "username": "abdalluh124", "image": "https://files.kick.com/images/user/40905121/profile_image/conversion/087fbf86-3291-43c7-b776-59810fb29f22-fullsize.webp", "category": "S.OPS" },
+  { "id": 40, "name": "abadi", "icName": "", "username": "abadi", "image": "https://files.kick.com/images/user/1133536/profile_image/conversion/cae20ef2-37f9-415d-8b9b-703322085be2-fullsize.webp", "category": "Crypto" },
+  { "id": 41, "name": "4trry", "icName": "", "username": "4trry", "image": "https://files.kick.com/images/user/54246796/profile_image/conversion/a96d5f23-15a6-41e4-83b8-fba40bb3f23f-fullsize.webp", "category": "عصابة البلس" },
+  { "id": 42, "name": "3mrte0", "icName": "نمر ال عبيد", "username": "3mrte0", "image": "https://files.kick.com/images/user/40852277/profile_image/conversion/7ff53c6d-f7a3-4da4-a0e0-8a1df44480dc-fullsize.webp", "category": "عائلة عبيد" },
+  { "id": 43, "name": "aymnalsatam", "icName": "ايمن سطام", "username": "aymnalsatam", "image": "https://files.kick.com/images/user/6053230/profile_image/conversion/7c282bda-ff93-4956-8313-dfcabcae0430-fullsize.webp", "category": "الشرطة" },
+  { "id": 44, "name": "absi", "icName": "قومبز اوغلو", "username": "absi", "image": "https://files.kick.com/images/user/27894320/profile_image/conversion/0d098931-31c2-4720-a6fe-e0c82bef9986-fullsize.webp", "category": "عصابة البرازيليين" },
+  { "id": 45, "name": "eeid", "icName": "سكيلر روس", "username": "eeid", "image": "https://files.kick.com/images/user/7315650/profile_image/conversion/b1611636-1d11-46d5-8182-c099a7faf13d-fullsize.webp", "category": "الشرطة" },
   { "id": 46, "name": "jaber1", "icName": "جابر أحمد", "username": "jaber1", "image": "https://files.kick.com/images/user/5734623/profile_image/conversion/8d668b6e-c2a2-4806-b726-63a613fff037-fullsize.webp", "category": "الشرطة" },
   { "id": 47, "name": "zAlbaloshi", "icName": "بلبي", "username": "zAlbaloshi", "image": "https://files.kick.com/images/user/5871412/profile_image/conversion/376f099c-afcc-41b4-981c-73dee3d3d8c4-fullsize.webp", "category": "Crypto" },
   { "id": 48, "name": "only_wily", "icName": "وليد فالح", "username": "only_wily", "image": "https://files.kick.com/images/user/8337940/profile_image/conversion/174b4e96-5d39-443a-a08a-eb4fc631d872-fullsize.webp", "category": "S.OPS" },
@@ -71,11 +81,6 @@ function createParticles() {
 // ==========================================
 // 3. المحرك الذكي (تحديث كل 30 ثانية)
 // ==========================================
-
-// رابط سيرفر Render الخاص بك
-const MY_API_URL = "https://respect-api.onrender.com";
-
-let allStreamersData = []; // لتخزين البيانات المحلية
 
 document.addEventListener('DOMContentLoaded', () => {
     createParticles();
@@ -123,9 +128,9 @@ function renderInitialCards() {
     document.getElementById('total-streamers').innerText = streamersList.length;
 }
 
-// دالة الفحص
+// 🔥 دالة الفحص (استخدام corsproxy.io) 🔥
 async function checkAllStreamers() {
-    const batchSize = 8;
+    const batchSize = 6;
     let liveCounter = 0;
     let totalViewersCount = 0;
 
@@ -134,26 +139,37 @@ async function checkAllStreamers() {
         
         const promises = batch.map(async (streamer) => {
             try {
-                // إضافة timestamp لكسر الكاش وضمان أرقام جديدة
-                const response = await fetch(`${MY_API_URL}/check/${streamer.username}?t=${Date.now()}`);
+                // ✅ العودة لاستخدام البروكسي المباشر الذي نجح سابقاً
+                // إضافة ?t= للرابط لمنع المتصفح من حفظ النتيجة القديمة (الكاش)
+                const proxyUrl = `https://corsproxy.io/?https://kick.com/api/v1/channels/${streamer.username}?t=${Date.now()}`;
+                
+                const response = await fetch(proxyUrl);
                 
                 if(response.ok) {
                     const data = await response.json();
-                    if (data.isLive) {
-                        updateCardUI(streamer, true, data.viewers); // تحديث الرقم فوراً
+                    
+                    const isLive = data.livestream !== null;
+                    let viewers = 0;
+                    if (isLive && data.livestream) {
+                        viewers = data.livestream.viewer_count || 0;
+                    }
+
+                    if (isLive) {
+                        updateCardUI(streamer, true, viewers); 
                         liveCounter++;
-                        totalViewersCount += data.viewers;
+                        totalViewersCount += viewers;
                     } else {
                         updateCardUI(streamer, false, 0);
                     }
                 }
             } catch (e) {
-                // console.log(e);
+                console.log(`Failed to check ${streamer.username}:`, e);
+                // لا نغير الحالة للأوفلاين فوراً عند الخطأ لتجنب الرمش، إلا إذا أردت ذلك
             }
         });
 
         await Promise.all(promises);
-        await new Promise(r => setTimeout(r, 200)); 
+        await new Promise(r => setTimeout(r, 500)); 
     }
     
     document.getElementById('live-count').innerText = liveCounter;
