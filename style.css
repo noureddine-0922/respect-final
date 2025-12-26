@@ -2,8 +2,7 @@
     --kick-green: #53fc18;
     --respect-purple: #8a2be2;
     --offline-red: #ff3333;
-    /* إضافة اللون الذهبي */
-    --gold-color: #ffd700;
+    --gold-color: #ffd700; /* اللون الذهبي */
     --bg-dark: #0b0e11;
     --card-bg: #14171a;
     --text-color: #ffffff;
@@ -123,9 +122,9 @@ header { text-align: center; margin-bottom: 30px; }
    🔥 تصميم بطاقة التوب (الأكثر مشاهدة) 🔥
    ========================================= */
 .card.top-streamer-card {
-    border-color: var(--gold-color) !important; /* إطار ذهبي */
-    box-shadow: 0 0 25px rgba(255, 215, 0, 0.4) !important; /* توهج ذهبي */
-    order: -2 !important; /* ضمان أنه الأول دائماً */
+    border-color: var(--gold-color) !important;
+    box-shadow: 0 0 25px rgba(255, 215, 0, 0.4) !important;
+    order: -2 !important;
 }
 
 /* أيقونة التاج */
@@ -133,20 +132,19 @@ header { text-align: center; margin-bottom: 30px; }
     margin-right: 5px;
     color: var(--gold-color);
     font-size: 1.1rem;
-    animation: bounce 2s infinite; /* أنيميشن اهتزاز بسيط */
+    animation: bounce 2s infinite;
 }
 
 /* شارة الأكثر مشاهدة */
 .status-top {
-    background: linear-gradient(45deg, #ffd700, #ffaa00) !important; /* خلفية ذهبية متدرجة */
-    color: #000 !important; /* نص أسود */
+    background: linear-gradient(45deg, #ffd700, #ffaa00) !important;
+    color: #000 !important;
     font-weight: 800 !important;
     box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
 }
 
-
 .card-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(180deg, rgba(83,252,24,0.05) 0%, transparent 100%); }
-.streamer-info h3 { margin: 0; font-size: 1.1rem; display: flex; align-items: center; } /* تعديل لعرض التاج بجانب الاسم */
+.streamer-info h3 { margin: 0; font-size: 1.1rem; display: flex; align-items: center; }
 .username { color: #888; font-size: 0.85rem; margin-top: 5px; }
 .ic-name { color: var(--kick-green); font-size: 0.8rem; margin-top: 5px; }
 .streamer-img { width: 60px; height: 60px; border-radius: 50%; border: 2px solid #333; object-fit: cover; }
@@ -159,7 +157,7 @@ header { text-align: center; margin-bottom: 30px; }
 .status-off { background: rgba(255, 51, 51, 0.1); color: var(--offline-red); }
 .dot-red { color: var(--offline-red); }
 
-.viewers { font-weight: bold; font-size: 0.9rem; }
+.viewers-count { font-weight: bold; font-size: 0.9rem; }
 
 /* الفوتر */
 footer { text-align: center; margin-top: 50px; padding-bottom: 20px; color: #666; font-size: 0.9rem; }
@@ -167,15 +165,64 @@ footer { text-align: center; margin-top: 50px; padding-bottom: 20px; color: #666
 .twitter-link { display: inline-flex; align-items: center; gap: 8px; color: #fff; text-decoration: none; margin-top: 10px; padding: 8px 20px; background: #000; border-radius: 20px; border: 1px solid #333; transition: 0.3s; }
 .twitter-link:hover { border-color: var(--kick-green); color: var(--kick-green); }
 
+/* =========================================
+   🔔 نظام الإشعارات (Notifications)
+   ========================================= */
+#toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    pointer-events: none;
+}
+
+.toast {
+    background: rgba(20, 23, 26, 0.95);
+    border: 1px solid var(--kick-green);
+    border-right: 5px solid var(--kick-green);
+    padding: 15px 20px;
+    border-radius: 12px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    min-width: 280px;
+    max-width: 350px;
+    backdrop-filter: blur(10px);
+    direction: rtl;
+    pointer-events: auto;
+    cursor: pointer;
+    animation: slideInRight 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.toast:hover { transform: scale(1.02); box-shadow: 0 0 20px rgba(83, 252, 24, 0.3); }
+
+.toast img {
+    width: 45px; height: 45px;
+    border-radius: 50%;
+    border: 2px solid var(--kick-green);
+    object-fit: cover;
+}
+
+.toast-content { display: flex; flex-direction: column; text-align: right; }
+.toast-title { font-weight: 800; font-size: 0.95rem; color: var(--kick-green); margin-bottom: 2px; }
+.toast-msg { font-size: 0.8rem; color: #ddd; }
+
+.toast.hide { animation: slideOutRight 0.5s ease-in forwards; }
+
 /* أنيميشن */
 @keyframes colorBreathing { 0% { color: var(--kick-green); } 50% { color: var(--respect-purple); } 100% { color: var(--kick-green); } }
 @keyframes borderBreathing { 0% { border-color: var(--kick-green); } 50% { border-color: var(--respect-purple); } 100% { border-color: var(--kick-green); } }
 @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(83, 252, 24, 0.7); } 70% { box-shadow: 0 0 0 10px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
 @keyframes float { 0% { transform: translateY(0) rotate(0deg); } 100% { transform: translateY(-100px) rotate(360deg); } }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-/* أنيميشن اهتزاز التاج */
 @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
-
+@keyframes slideInRight { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes slideOutRight { from { transform: translateX(0); opacity: 1; } to { transform: translateX(120%); opacity: 0; } }
 
 @media (max-width: 768px) {
     .controls-area { flex-direction: column-reverse; align-items: stretch; }

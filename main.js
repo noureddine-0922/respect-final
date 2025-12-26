@@ -79,26 +79,31 @@ function createParticles() {
 }
 
 // ==========================================
-// 3. المحرك الذكي (تحديث كل 30 ثانية)
+// 3. المحرك الذكي والإشعارات
 // ==========================================
+
+// متغيرات تتبع الحالة
+let knownLiveStreamers = new Set(); // لتخزين من هم لايف حالياً
+let isFirstRun = true; // عشان ما نرسل إشعارات أول ما يفتح الموقع
 
 document.addEventListener('DOMContentLoaded', () => {
     createParticles();
-    renderInitialCards(); // رسم البطاقات فوراً
+    createToastContainer(); // إنشاء حاوية الإشعارات
+    renderInitialCards();
     
-    checkAllStreamers();  // الفحص الأول
+    checkAllStreamers(); 
     
-    // 🔥 التحديث التلقائي كل 30 ثانية
+    // تحديث كل 30 ثانية
     setInterval(checkAllStreamers, 30000); 
 
-    // شريط التحديث المتغير (أخضر -> بنفسجي)
+    // شريط التحديث
     let progress = 0;
     let isPurpleMode = false;
     const bar = document.getElementById('progress-bar');
     if(bar) bar.style.backgroundColor = '#53fc18'; 
 
     setInterval(() => {
-        progress += (100 / 30); // تم تعديل السرعة لـ 30 ثانية
+        progress += (100 / 30);
         if (progress > 100) {
             progress = 0;
             isPurpleMode = !isPurpleMode;
@@ -117,6 +122,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 4000);
 });
 
+function createToastContainer() {
+    if (!document.getElementById('toast-container')) {
+        const container = document.createElement('div');
+        container.id = 'toast-container';
+        document.body.appendChild(container);
+    }
+}
+
 function renderInitialCards() {
     const grid = document.getElementById('streamer-grid');
     grid.innerHTML = ''; 
@@ -128,7 +141,7 @@ function renderInitialCards() {
     document.getElementById('total-streamers').innerText = streamersList.length;
 }
 
-// 🔥 دالة الفحص (استخدام corsproxy.io) 🔥
+// 🔥 دالة الفحص 🔥
 async function checkAllStreamers() {
     const batchSize = 6;
     let liveCounter = 0;
@@ -139,7 +152,6 @@ async function checkAllStreamers() {
         
         const promises = batch.map(async (streamer) => {
             try {
-                // إضافة timestamp لمنع الكاش
                 const proxyUrl = `https://corsproxy.io/?https://kick.com/api/v1/channels/${streamer.username}?t=${Date.now()}`;
                 
                 const response = await fetch(proxyUrl);
@@ -154,15 +166,23 @@ async function checkAllStreamers() {
                     }
 
                     if (isLive) {
+                        // 🔔 التحقق من الإشعارات 🔔
+                        if (!isFirstRun && !knownLiveStreamers.has(streamer.username)) {
+                            showNotification(streamer);
+                        }
+                        knownLiveStreamers.add(streamer.username);
+
                         updateCardUI(streamer, true, viewers); 
                         liveCounter++;
                         totalViewersCount += viewers;
                     } else {
+                        // إذا طفى البث نحذفه من القائمة عشان لو رجع نرسل إشعار
+                        knownLiveStreamers.delete(streamer.username);
                         updateCardUI(streamer, false, 0);
                     }
                 }
             } catch (e) {
-                console.log(`Failed to check ${streamer.username}:`, e);
+                console.log(`Failed to check ${streamer.username}`);
             }
         });
 
@@ -170,12 +190,49 @@ async function checkAllStreamers() {
         await new Promise(r => setTimeout(r, 500)); 
     }
     
+    // بعد انتهاء أول دورة فحص كاملة، نوقف وضع "التشغيل الأول"
+    if (isFirstRun) isFirstRun = false;
+
     document.getElementById('live-count').innerText = liveCounter;
     document.getElementById('total-viewers').innerText = totalViewersCount.toLocaleString();
     
-    findAndHighlightTop(); // تحديث التوب
-    applyFilters(); // 🔥 تحديث الفلاتر لإخفاء/إظهار البطاقات حسب الحالة الجديدة 🔥
+    findAndHighlightTop();
+    applyFilters();
 }
+
+// ==========================================
+// 🔔 دالة إظهار الإشعار 🔔
+// ==========================================
+function showNotification(streamer) {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.onclick = () => window.open(`https://kick.com/${streamer.username}`, '_blank');
+    
+    toast.innerHTML = `
+        <img src="${streamer.image}" alt="${streamer.name}">
+        <div class="toast-content">
+            <div class="toast-title">🚨 بث مباشر!</div>
+            <div class="toast-msg">${streamer.name} بدأ البث الآن 🔥</div>
+        </div>
+    `;
+
+    container.appendChild(toast);
+
+    // صوت تنبيه خفيف (اختياري)
+    // const audio = new Audio('notification.mp3'); audio.play().catch(e=>{});
+
+    // إخفاء بعد 5 ثواني
+    setTimeout(() => {
+        toast.classList.add('hide');
+        toast.addEventListener('animationend', () => {
+            toast.remove();
+        });
+    }, 5000);
+}
+
 
 // ==========================================
 // 4. دوال التحديث والرسم (UI)
@@ -212,7 +269,6 @@ function createCardElement(s, isLive, viewers) {
     return card;
 }
 
-// دالة التحديث الذكية (تغير الأرقام بدون وميض)
 function updateCardUI(s, isLive, viewers) {
     const card = document.getElementById(`card-${s.username}`);
     if (!card) return;
@@ -255,7 +311,6 @@ function updateCardUI(s, isLive, viewers) {
     }
 }
 
-// دالة تحديد التوب
 function findAndHighlightTop() {
     const cards = Array.from(document.querySelectorAll('.card'));
     let maxViewers = -1;
@@ -288,7 +343,6 @@ function reorderGrid() {
     const cards = Array.from(grid.children);
 
     cards.sort((a, b) => {
-        // التوب دائماً الأول
         const isTopA = a.classList.contains('top-streamer-card');
         const isTopB = b.classList.contains('top-streamer-card');
         if (isTopA && !isTopB) return -1;
@@ -306,12 +360,6 @@ function reorderGrid() {
     cards.forEach(card => grid.appendChild(card));
 }
 
-function formatCategory(cat) {
-    if (Array.isArray(cat)) return cat.join(' - ');
-    return cat;
-}
-
-// القائمة المنسدلة
 function toggleDropdown() {
     document.getElementById('catDropdown').classList.toggle('show');
 }
