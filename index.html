@@ -69,7 +69,7 @@
           { "id": 1, "name": "S5B", "icName": "ماثيو ستانلي", "username": "s5b", "image": "https://files.kick.com/images/user/5543715/profile_image/conversion/0f18fe5a-ccaf-4fc9-b6b4-fb6d953c7952-fullsize.webp", "category": "citizen" },
           { "id": 2, "name": "xKnDrx", "icName": "عبدالله الوليد", "username": "xkndrx", "image": "https://files.kick.com/images/user/5796065/profile_image/conversion/99da65f7-625f-408b-bc85-4328a64d9bf4-fullsize.webp", "category": "police" },
           { "id": 3, "name": "iSLF", "icName": "سلفستر سميث", "username": "islf", "image": "https://files.kick.com/images/user/5475836/profile_image/conversion/357fb6b0-9dbf-47c9-bf22-8304f8af5555-fullsize.webp", "category": "police" },
-          { "id": 4, "name": "Drb7h", "icName": "كافح المكافخ", "username": "drb7h", "image": "https://files.kick.com/images/user/4434632/profile_image/conversion/26516e13-f362-4f7d-8b16-f458b5414f3c-fullsize.webp", "category": "police" },
+          { "id": 4, "name": "Drb7h", "icName": "كافح المكافح", "username": "drb7h", "image": "https://files.kick.com/images/user/4434632/profile_image/conversion/26516e13-f362-4f7d-8b16-f458b5414f3c-fullsize.webp", "category": "police" },
           { "id": 5, "name": "itsD70", "icName": "بوليلو", "username": "itsd70", "image": "https://files.kick.com/images/user/5950524/profile_image/conversion/acb54af5-efcb-4b5a-bcc5-e1824fe61676-fullsize.webp", "category": "gangs" },
           { "id": 6, "name": "aboali62", "icName": "علي عامر", "username": "aboali62", "image": "https://files.kick.com/images/user/50078315/profile_image/conversion/21a0677b-8092-4834-929f-9066ef4899f4-fullsize.webp", "category": "police" },
           { "id": 7, "name": "i2Reap", "icName": "عبد الودود البرماوي", "username": "i2reap", "image": "https://files.kick.com/images/user/5796065/profile_image/conversion/99da65f7-625f-408b-bc85-4328a64d9bf4-fullsize.webp", "category": "citizen" },
@@ -115,7 +115,7 @@
   { "id": 47, "name": "zAlbaloshi", "icName": "بلبي", "username": "zAlbaloshi", "image": "https://files.kick.com/images/user/5871412/profile_image/conversion/376f099c-afcc-41b4-981c-73dee3d3d8c4-fullsize.webp", "category": "Crypto" },
   { "id": 48, "name": "only_wily", "icName": "وليد فالح", "username": "only_wily", "image": "https://files.kick.com/images/user/8337940/profile_image/conversion/174b4e96-5d39-443a-a08a-eb4fc631d872-fullsize.webp", "category": "S.OPS" },
   { "id": 49, "name": "1mali", "icName": "مفرح بن علي", "username": "1mali", "image": "https://files.kick.com/images/user/5852294/profile_image/conversion/a385ff9d-ee7b-4fbb-87c2-cbb70ea2219b-fullsize.webp", "category": "الشرطة" },
-  { "id": 50, "name": "Sodry", "icName": "محمد السودري", "username": "sodry", "image": "https://cdn.discordapp.com/attachments/1453231244169973792/1453977179787366521/17667255648187630729168925888187.jpg", "category": "police" }
+  { "id": 50, "name": "Sodry", "icName": "محمد السودري", "username": "sodry", "image": "https://cdn.discordapp.com/attachments/1453231244169973792/1453977179787366521/17667255648187630729168925888187.jpg?ex=694f6945&is=694e17c5&hm=744522765f516725ff7f3cd1110cdd9a227a791b4e939000b29961c9a9f6ff19&", "category": "police" }
 ];
 
         // 2. المحرك
@@ -271,5 +271,29 @@
             });
         }
     </script>
+<script>
+    // منع الزر الأيمن
+    document.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    // منع اختصارات لوحة المفاتيح (F12, Ctrl+Shift+I, Ctrl+U, etc.)
+    document.onkeydown = function(e) {
+        if(event.keyCode == 123) { // F12
+            return false;
+        }
+        if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) { // Ctrl+Shift+I
+            return false;
+        }
+        if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) { // Ctrl+Shift+C
+            return false;
+        }
+        if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) { // Ctrl+Shift+J
+            return false;
+        }
+        if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) { // Ctrl+U (View Source)
+            return false;
+        }
+    }
+</script>
+
 </body>
 </html>
