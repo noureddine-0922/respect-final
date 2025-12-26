@@ -1,4 +1,6 @@
-// القائمة (50 ستريمر)
+// ==========================================
+// 1. البيانات
+// ==========================================
 const streamersList = [
   { "id": 1, "name": "S5B", "icName": "ماثيو ستانلي", "username": "s5b", "image": "https://files.kick.com/images/user/5543715/profile_image/conversion/0f18fe5a-ccaf-4fc9-b6b4-fb6d953c7952-fullsize.webp", "category": "citizen" },
   { "id": 2, "name": "xKnDrx", "icName": "عبدالله الوليد", "username": "xkndrx", "image": "https://files.kick.com/images/user/5796065/profile_image/conversion/99da65f7-625f-408b-bc85-4328a64d9bf4-fullsize.webp", "category": "police" },
@@ -51,89 +53,103 @@ const streamersList = [
   { "id": 49, "name": "1mali", "icName": "مفرح بن علي", "username": "1mali", "image": "https://files.kick.com/images/user/5852294/profile_image/conversion/a385ff9d-ee7b-4fbb-87c2-cbb70ea2219b-fullsize.webp", "category": "الشرطة" },
   { "id": 50, "name": "Sodry", "icName": "محمد السودري", "username": "sodry", "image": "https://cdn.discordapp.com/attachments/1453231244169973792/1453977179787366521/17667255648187630729168925888187.jpg?ex=694f6945&is=694e17c5&hm=744522765f516725ff7f3cd1110cdd9a227a791b4e939000b29961c9a9f6ff19&", "category": "police" }
 ];
-];
 
+// متغيرات الفلترة
+let activeCategory = 'all';
+let activeStatus = 'all';
+
+// 2. التهيئة
 document.addEventListener('DOMContentLoaded', () => {
     createParticles();
-    renderInitialCards(); 
-    checkAllStreamers();  
-    setInterval(checkAllStreamers, 60000); 
+    renderInitialCards();
+    checkAllStreamers();
+    setInterval(checkAllStreamers, 60000); // تحديث كل دقيقة
+
+    // شريط التحديث
+    let progress = 0;
+    setInterval(() => {
+        progress += (100 / 60);
+        if (progress > 100) progress = 0;
+        const bar = document.getElementById('progress-bar');
+        if(bar) bar.style.width = `${progress}%`;
+    }, 1000);
 });
 
+// 3. الخلفية
 function createParticles() {
     const container = document.getElementById('particles');
-    if(!container) return;
     const isMobile = window.innerWidth <= 768;
-    const particleCount = isMobile ? 15 : 30;
-    
-    for (let i = 0; i < particleCount; i++) {
+    for (let i = 0; i < (isMobile ? 15 : 30); i++) {
         const p = document.createElement('div');
         p.className = 'particle';
         const size = Math.random() * 4 + 2;
         p.style.width = `${size}px`;
         p.style.height = `${size}px`;
-        p.style.background = `rgba(255, ${Math.random() * 100 + 100}, 0, ${Math.random() * 0.3 + 0.1})`;
+        p.style.background = `rgba(83, 252, 24, ${Math.random() * 0.3 + 0.1})`;
         p.style.left = `${Math.random() * 100}%`;
         p.style.top = `${Math.random() * 100}%`;
-        p.style.animation = `float${i % 3} ${Math.random() * 15 + 15}s linear infinite`;
+        p.style.animation = `float ${Math.random() * 15 + 15}s linear infinite`;
         p.style.animationDelay = `-${Math.random() * 10}s`;
         container.appendChild(p);
     }
 }
 
+// 4. عرض البطاقات المبدئي
 function renderInitialCards() {
     const grid = document.getElementById('streamer-grid');
-    grid.innerHTML = ''; 
+    grid.innerHTML = '';
     streamersList.forEach(s => {
-        const card = createCardElement(s, false, 0); 
-        card.id = `card-${s.username}`; 
+        const card = createCardElement(s, false, 0);
+        card.id = `card-${s.username}`;
         grid.appendChild(card);
     });
     document.getElementById('total-streamers').innerText = streamersList.length;
 }
 
-// ===============================================
-// 🔥 الاتصال بدالة Netlify الداخلية
-// ===============================================
+// 5. المحرك (فحص الحالة)
 async function checkAllStreamers() {
     const batchSize = 6;
     let liveCounter = 0;
+    let totalViewersCount = 0;
 
     for (let i = 0; i < streamersList.length; i += batchSize) {
         const batch = streamersList.slice(i, i + batchSize);
-        
         const promises = batch.map(async (streamer) => {
-            // هنا السحر: نطلب من الدالة الداخلية للموقع
-            // /.netlify/functions/check
             try {
+                // البحث باستخدام الـ Backend Function
                 const response = await fetch(`/.netlify/functions/check?username=${streamer.username}`);
-                const data = await response.json();
-                
-                if (data.isLive) {
-                    updateCardUI(streamer, true, data.viewers);
-                    liveCounter++;
-                } else {
-                    updateCardUI(streamer, false, 0);
+                if(response.ok) {
+                    const data = await response.json();
+                    if (data.isLive) {
+                        updateCardUI(streamer, true, data.viewers);
+                        liveCounter++;
+                        totalViewersCount += data.viewers;
+                    } else {
+                        updateCardUI(streamer, false, 0);
+                    }
                 }
             } catch (e) {
                 updateCardUI(streamer, false, 0);
             }
         });
-
         await Promise.all(promises);
-        await new Promise(r => setTimeout(r, 500)); 
+        await new Promise(r => setTimeout(r, 500));
     }
     
+    // تحديث الأرقام
     document.getElementById('live-count').innerText = liveCounter;
-    reorderGrid();
+    document.getElementById('total-viewers').innerText = totalViewersCount.toLocaleString();
+    applyFilters(); // إعادة ترتيب وفلترة بعد التحديث
 }
 
+// 6. إنشاء وتحديث البطاقات
 function createCardElement(s, isLive, viewers) {
     const card = document.createElement('div');
     card.className = `card ${isLive ? 'online-card' : 'offline-card'}`;
     card.onclick = () => window.open(`https://kick.com/${s.username}`, '_blank');
     card.dataset.live = isLive ? "1" : "0";
     card.dataset.viewers = viewers;
+    card.dataset.category = JSON.stringify(s.category).toLowerCase(); 
 
     let icNameHtml = s.icName ? `<div class="ic-name">🎭 ${s.icName}</div>` : '';
 
@@ -150,10 +166,7 @@ function createCardElement(s, isLive, viewers) {
             <div class="status-badge ${isLive ? 'status-on' : 'status-off'}">
                 <span class="dot">●</span> ${isLive ? 'LIVE' : 'OFFLINE'}
             </div>
-            ${isLive ? `<div class="viewers-count"><i class="fa-regular fa-eye"></i> ${viewers.toLocaleString()}</div>` : ''}
-        </div>
-        <div style="font-size:0.8rem; color:#888; margin-top:10px; text-align:right;">
-            ${formatCategory(s.category)}
+            ${isLive ? `<div class="viewers"><i class="fa-solid fa-eye"></i> ${viewers.toLocaleString()}</div>` : ''}
         </div>
     `;
     return card;
@@ -163,48 +176,106 @@ function updateCardUI(s, isLive, viewers) {
     const card = document.getElementById(`card-${s.username}`);
     if (!card) return;
 
-    if (isLive) {
-        card.className = 'card online-card';
-        card.querySelector('.streamer-img').classList.add('pulse');
-        card.querySelector('.status-badge').className = 'status-badge status-on';
-        card.querySelector('.status-badge').innerHTML = '<span class="dot">●</span> مباشر الآن 🔥';
-        
-        let countDiv = card.querySelector('.viewers-count');
-        if (!countDiv) {
-            countDiv = document.createElement('div');
-            countDiv.className = 'viewers-count';
-            card.querySelector('.card-footer').appendChild(countDiv);
-        }
-        countDiv.innerHTML = `<i class="fa-regular fa-eye"></i> ${viewers.toLocaleString()}`;
-    } else {
-        card.className = 'card offline-card';
-        card.querySelector('.streamer-img').classList.remove('pulse');
-        card.querySelector('.status-badge').className = 'status-badge status-off';
-        card.querySelector('.status-badge').innerHTML = '<span class="dot">●</span> Offline';
-        const countDiv = card.querySelector('.viewers-count');
-        if (countDiv) countDiv.remove();
-    }
+    // تحديث الداتا
     card.dataset.live = isLive ? "1" : "0";
     card.dataset.viewers = viewers;
+
+    // تحديث الكلاسات
+    if (isLive) {
+        card.classList.add('online-card');
+        card.classList.remove('offline-card');
+        card.querySelector('.streamer-img').classList.add('pulse');
+        card.querySelector('.status-badge').className = 'status-badge status-on';
+        card.querySelector('.status-badge').innerHTML = '<span class="dot">●</span> مباشر 🔥';
+        
+        let vDiv = card.querySelector('.viewers');
+        if(!vDiv) {
+            vDiv = document.createElement('div');
+            vDiv.className = 'viewers';
+            card.querySelector('.card-footer').appendChild(vDiv);
+        }
+        vDiv.innerHTML = `<i class="fa-solid fa-eye"></i> ${viewers.toLocaleString()}`;
+    } else {
+        card.classList.remove('online-card');
+        card.classList.add('offline-card');
+        card.querySelector('.streamer-img').classList.remove('pulse');
+        card.querySelector('.status-badge').className = 'status-badge status-off';
+        card.querySelector('.status-badge').innerHTML = '<span class="dot">●</span> غير متصل';
+        const vDiv = card.querySelector('.viewers');
+        if(vDiv) vDiv.remove();
+    }
 }
 
-function reorderGrid() {
+// 7. منطق الفلاتر
+function toggleDropdown() {
+    document.getElementById('catDropdown').classList.toggle('show');
+}
+
+// إغلاق القائمة عند الضغط خارجها
+window.onclick = function(event) {
+    if (!event.target.matches('.dropdown-btn') && !event.target.matches('.dropdown-btn *')) {
+        var dropdowns = document.getElementsByClassName("dropdown-content");
+        for (var i = 0; i < dropdowns.length; i++) {
+            if (dropdowns[i].classList.contains('show')) {
+                dropdowns[i].classList.remove('show');
+            }
+        }
+    }
+}
+
+function filterCategory(cat) {
+    activeCategory = cat.toLowerCase();
+    // تحديث نص الزر
+    const btnText = document.querySelector('.dropdown-btn span');
+    if(cat === 'all') btnText.innerText = 'تصنيف الفئات';
+    else if(cat === 'police') btnText.innerText = 'الشرطة 👮‍♂️';
+    else if(cat === 'gangs') btnText.innerText = 'عصابات ⚔️';
+    else if(cat === 'citizen') btnText.innerText = 'مواطنين 🧍';
+    else btnText.innerText = cat;
+    
+    applyFilters();
+}
+
+function filterStatus(status, btn) {
+    activeStatus = status;
+    // تحديث الأزرار
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    applyFilters();
+}
+
+function applyFilters() {
     const grid = document.getElementById('streamer-grid');
     const cards = Array.from(grid.children);
+
+    cards.forEach(card => {
+        const cardCat = card.dataset.category;
+        const isLive = card.dataset.live === "1";
+        
+        let showCat = activeCategory === 'all' || cardCat.includes(activeCategory);
+        let showStatus = activeStatus === 'all' || 
+                         (activeStatus === 'live' && isLive) || 
+                         (activeStatus === 'offline' && !isLive);
+
+        if (showCat && showStatus) {
+            card.style.display = 'flex';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+    
+    // إعادة الترتيب (اللايف دائماً فوق)
     cards.sort((a, b) => {
         const liveA = parseInt(a.dataset.live);
         const liveB = parseInt(b.dataset.live);
         const viewA = parseInt(a.dataset.viewers);
         const viewB = parseInt(b.dataset.viewers);
-        if (liveA !== liveB) return liveB - liveA; 
-        return viewB - viewA; 
+        
+        if (liveA !== liveB) return liveB - liveA; // اللايف أولاً
+        return viewB - viewA; // الأكثر مشاهدة أولاً
     });
+    
     cards.forEach(card => grid.appendChild(card));
-}
-
-function formatCategory(cat) {
-    if (Array.isArray(cat)) return cat.join(' - ');
-    return cat;
 }
 
 function searchStreamers() {
@@ -212,7 +283,7 @@ function searchStreamers() {
     const cards = document.querySelectorAll('.card');
     cards.forEach(card => {
         const text = card.innerText.toLowerCase();
-        card.style.display = text.includes(query) ? 'flex' : 'none';
+        if(text.includes(query)) card.style.display = 'flex';
+        else card.style.display = 'none';
     });
 }
-
