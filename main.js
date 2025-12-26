@@ -1,5 +1,5 @@
 // ==========================================
-// 1. البيانات
+// 1. القائمة الكاملة
 // ==========================================
 const streamersList = [
   { "id": 1, "name": "S5B", "icName": "ماثيو ستانلي", "username": "s5b", "image": "https://files.kick.com/images/user/5543715/profile_image/conversion/0f18fe5a-ccaf-4fc9-b6b4-fb6d953c7952-fullsize.webp", "category": "citizen" },
@@ -8,7 +8,7 @@ const streamersList = [
   { "id": 4, "name": "Drb7h", "icName": "كافح المكافح", "username": "drb7h", "image": "https://files.kick.com/images/user/4434632/profile_image/conversion/26516e13-f362-4f7d-8b16-f458b5414f3c-fullsize.webp", "category": "police" },
   { "id": 5, "name": "itsD70", "icName": "بوليلو", "username": "itsd70", "image": "https://files.kick.com/images/user/5950524/profile_image/conversion/acb54af5-efcb-4b5a-bcc5-e1824fe61676-fullsize.webp", "category": "gangs" },
   { "id": 6, "name": "aboali62", "icName": "علي عامر", "username": "aboali62", "image": "https://files.kick.com/images/user/50078315/profile_image/conversion/21a0677b-8092-4834-929f-9066ef4899f4-fullsize.webp", "category": "police" },
-  { "id": 7, "name": "i2Reap", "icName": "عبد الودود البرماوي", "username": "i2reap", "image": "https://files.kick.com/images/user/1154012/profile_image/conversion/ceae6396-b57e-465c-9071-171e69d558ec-fullsize.webp", "category": "citizen" },
+  { "id": 7, "name": "i2Reap", "icName": "عبد الودود البرماوي", "username": "i2reap", "image": "https://files.kick.com/images/user/5796065/profile_image/conversion/99da65f7-625f-408b-bc85-4328a64d9bf4-fullsize.webp", "category": "citizen" },
   { "id": 8, "name": "taf86", "icName": "صقر ال عبيد", "username": "taf86", "image": "https://files.kick.com/images/user/7364286/profile_image/conversion/474b770c-3110-4683-a732-8f9582b7de49-fullsize.webp", "category": "عائلة عبيد" },
   { "id": 9, "name": "taemor", "icName": "مصطفى سداح", "username": "taemor", "image": "https://files.kick.com/images/user/19779361/profile_image/conversion/2f0f0e7c-b58c-4ed5-a7ab-359ec1894320-fullsize.webp", "category": "عائلة الياكوزا" },
   { "id": 10, "name": "sayko_911", "icName": "حربي الزير", "username": "sayko_911", "image": "https://files.kick.com/images/user/16694172/profile_image/conversion/cbc3a87b-892f-40cb-a2f0-a4ef013425f6-fullsize.webp", "category": "عائلة الياكوزا" },
@@ -37,42 +37,63 @@ const streamersList = [
   { "id": 33, "name": "hook", "icName": "سيف ال عبيد", "username": "hook", "image": "https://files.kick.com/images/user/5665994/profile_image/conversion/550120fb-3de7-4a42-bccc-cc83b5760a81-fullsize.webp", "category": "عائلة عبيد" },
   { "id": 34, "name": "foxrex", "icName": "", "username": "foxrex", "image": "https://files.kick.com/images/user/33211413/profile_image/conversion/b289d671-59e2-48d6-b86a-14d1143a48b7-fullsize.webp", "category": "عصابة البلس" },
   { "id": 35, "name": "f1aisal", "icName": "عقاب المخلوط", "username": "f1aisal", "image": "https://files.kick.com/images/user/5684147/profile_image/conversion/8a0ac812-3ea6-4ef6-90ef-da27fe7d94ca-fullsize.webp", "category": "الشرطة" },
-  { "id": 36, "name": "drkaalo", "icName": "أبو جلمبو", "username": "drkaalo", "image": "https://files.kick.com/images/user/47831636/profile_image/conversion/7543a6e7-f8b3-498f-87e7-e5034672b837-fullsize.webp", "category": "Middle Gang" },
-  { "id": 37, "name": "al_hashidi", "icName": "سعيد الحاشدي", "username": "al_hashidi", "image": "https://files.kick.com/images/user/40611253/profile_image/conversion/0e2faea9-5e49-4e4c-b313-e10e7eaaa10e-fullsize.webp", "category": "العدل" },
-  { "id": 38, "name": "abokhaled_sa", "icName": "ذياب خلفان", "username": "abokhaled_sa", "image": "https://files.kick.com/images/user/6112408/profile_image/conversion/f4ac7373-aee8-4bbd-95aa-494af2454654-fullsize.webp", "category": "الشرطة" },
-  { "id": 39, "name": "abdalluh124", "icName": "", "username": "abdalluh124", "image": "https://files.kick.com/images/user/40905121/profile_image/conversion/087fbf86-3291-43c7-b776-59810fb29f22-fullsize.webp", "category": "S.OPS" },
-  { "id": 40, "name": "abadi", "icName": "", "username": "abadi", "image": "https://files.kick.com/images/user/1133536/profile_image/conversion/cae20ef2-37f9-415d-8b9b-703322085be2-fullsize.webp", "category": "Crypto" },
-  { "id": 41, "name": "4trry", "icName": "", "username": "4trry", "image": "https://files.kick.com/images/user/54246796/profile_image/conversion/a96d5f23-15a6-41e4-83b8-fba40bb3f23f-fullsize.webp", "category": "عصابة البلس" },
-  { "id": 42, "name": "3mrte0", "icName": "نمر ال عبيد", "username": "3mrte0", "image": "https://files.kick.com/images/user/40852277/profile_image/conversion/7ff53c6d-f7a3-4da4-a0e0-8a1df44480dc-fullsize.webp", "category": "عائلة عبيد" },
-  { "id": 43, "name": "aymnalsatam", "icName": "ايمن سطام", "username": "aymnalsatam", "image": "https://files.kick.com/images/user/6053230/profile_image/conversion/7c282bda-ff93-4956-8313-dfcabcae0430-fullsize.webp", "category": "الشرطة" },
-  { "id": 44, "name": "absi", "icName": "قومبز اوغلو", "username": "absi", "image": "https://files.kick.com/images/user/27894320/profile_image/conversion/0d098931-31c2-4720-a6fe-e0c82bef9986-fullsize.webp", "category": "عصابة البرازيليين" },
-  { "id": 45, "name": "eeid", "icName": "سكيلر روس", "username": "eeid", "image": "https://files.kick.com/images/user/7315650/profile_image/conversion/b1611636-1d11-46d5-8182-c099a7faf13d-fullsize.webp", "category": "الشرطة" },
   { "id": 46, "name": "jaber1", "icName": "جابر أحمد", "username": "jaber1", "image": "https://files.kick.com/images/user/5734623/profile_image/conversion/8d668b6e-c2a2-4806-b726-63a613fff037-fullsize.webp", "category": "الشرطة" },
   { "id": 47, "name": "zAlbaloshi", "icName": "بلبي", "username": "zAlbaloshi", "image": "https://files.kick.com/images/user/5871412/profile_image/conversion/376f099c-afcc-41b4-981c-73dee3d3d8c4-fullsize.webp", "category": "Crypto" },
   { "id": 48, "name": "only_wily", "icName": "وليد فالح", "username": "only_wily", "image": "https://files.kick.com/images/user/8337940/profile_image/conversion/174b4e96-5d39-443a-a08a-eb4fc631d872-fullsize.webp", "category": "S.OPS" },
   { "id": 49, "name": "1mali", "icName": "مفرح بن علي", "username": "1mali", "image": "https://files.kick.com/images/user/5852294/profile_image/conversion/a385ff9d-ee7b-4fbb-87c2-cbb70ea2219b-fullsize.webp", "category": "الشرطة" },
-  { "id": 50, "name": "Sodry", "icName": "محمد السودري", "username": "sodry", "image": "https://cdn.discordapp.com/attachments/1453231244169973792/1453977179787366521/17667255648187630729168925888187.jpg?ex=694f6945&is=694e17c5&hm=744522765f516725ff7f3cd1110cdd9a227a791b4e939000b29961c9a9f6ff19&", "category": "police" }
+  { "id": 50, "name": "Sodry", "icName": "محمد السودري", "username": "sodry", "image": "https://cdn.discordapp.com/attachments/1453231244169973792/1453977179787366521/17667255648187630729168925888187.jpg", "category": "police" }
 ];
 
-// متغيرات الفلترة
-let activeCategory = 'all';
-let activeStatus = 'all';
+// ==========================================
+// 2. نظام الجسيمات
+// ==========================================
+function createParticles() {
+    const container = document.getElementById('particles');
+    if(!container) return;
+    const isMobile = window.innerWidth <= 768;
+    const particleCount = isMobile ? 15 : 30;
+    
+    for (let i = 0; i < particleCount; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const size = Math.random() * 30 + 20; 
+        p.style.width = `${size}px`;
+        p.style.height = `${size}px`;
+        p.style.opacity = Math.random() * 0.5 + 0.1;
+        p.style.left = `${Math.random() * 100}%`;
+        p.style.top = `${Math.random() * 100}%`;
+        p.style.animation = `float ${Math.random() * 15 + 15}s linear infinite`;
+        p.style.animationDelay = `-${Math.random() * 10}s`;
+        container.appendChild(p);
+    }
+}
 
-// التهيئة
+// ==========================================
+// 3. المحرك الذكي (تحديث كل 30 ثانية)
+// ==========================================
+
+// رابط سيرفر Render الخاص بك
+const MY_API_URL = "https://respect-api.onrender.com";
+
+let allStreamersData = []; // لتخزين البيانات المحلية
+
 document.addEventListener('DOMContentLoaded', () => {
     createParticles();
-    renderInitialCards();
-    checkAllStreamers();
-    setInterval(checkAllStreamers, 60000); // تحديث كل دقيقة
+    renderInitialCards(); // رسم البطاقات فوراً
+    
+    checkAllStreamers();  // الفحص الأول
+    
+    // 🔥 التحديث التلقائي كل 30 ثانية
+    setInterval(checkAllStreamers, 30000); 
 
-    // شريط التحديث المتغير
+    // شريط التحديث المتغير (أخضر -> بنفسجي)
     let progress = 0;
     let isPurpleMode = false;
     const bar = document.getElementById('progress-bar');
     if(bar) bar.style.backgroundColor = '#53fc18'; 
 
     setInterval(() => {
-        progress += (100 / 60);
+        progress += (100 / 30); // تم تعديل السرعة لـ 30 ثانية
         if (progress > 100) {
             progress = 0;
             isPurpleMode = !isPurpleMode;
@@ -91,95 +112,66 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 4000);
 });
 
-// الخلفية
-function createParticles() {
-    const container = document.getElementById('particles');
-    if(!container) return;
-    const isMobile = window.innerWidth <= 768;
-    for (let i = 0; i < (isMobile ? 15 : 30); i++) {
-        const p = document.createElement('div');
-        p.className = 'particle';
-        const size = Math.random() * 30 + 20;
-        p.style.width = `${size}px`;
-        p.style.height = `${size}px`;
-        p.style.opacity = Math.random() * 0.5 + 0.1;
-        p.style.left = `${Math.random() * 100}%`;
-        p.style.top = `${Math.random() * 100}%`;
-        p.style.animation = `float ${Math.random() * 15 + 15}s linear infinite`;
-        p.style.animationDelay = `-${Math.random() * 10}s`;
-        container.appendChild(p);
-    }
-}
-
-// عرض البطاقات
 function renderInitialCards() {
     const grid = document.getElementById('streamer-grid');
-    grid.innerHTML = '';
+    grid.innerHTML = ''; 
     streamersList.forEach(s => {
-        const card = createCardElement(s, false, 0);
-        card.id = `card-${s.username}`;
+        const card = createCardElement(s, false, 0); 
+        card.id = `card-${s.username}`; 
         grid.appendChild(card);
     });
     document.getElementById('total-streamers').innerText = streamersList.length;
 }
 
-// =========================================================
-// 🔥 المحرك الجديد (فحص من المتصفح باستخدام وكيل CORS) 🔥
-// =========================================================
+// دالة الفحص
 async function checkAllStreamers() {
-    const batchSize = 6;
+    const batchSize = 8;
     let liveCounter = 0;
     let totalViewersCount = 0;
 
     for (let i = 0; i < streamersList.length; i += batchSize) {
         const batch = streamersList.slice(i, i + batchSize);
+        
         const promises = batch.map(async (streamer) => {
             try {
-                // استخدام وكيل مجاني لتجاوز حظر Kick
-                const proxyUrl = `https://corsproxy.io/?https://kick.com/api/v1/channels/${streamer.username}`;
-                
-                const response = await fetch(proxyUrl);
+                // إضافة timestamp لكسر الكاش وضمان أرقام جديدة
+                const response = await fetch(`${MY_API_URL}/check/${streamer.username}?t=${Date.now()}`);
                 
                 if(response.ok) {
                     const data = await response.json();
-                    
-                    // تحليل بيانات Kick الرسمية
-                    const isLive = data.livestream !== null;
-                    let viewers = 0;
-                    if (isLive && data.livestream) {
-                        viewers = data.livestream.viewer_count || 0;
-                    }
-
-                    if (isLive) {
-                        updateCardUI(streamer, true, viewers);
+                    if (data.isLive) {
+                        updateCardUI(streamer, true, data.viewers); // تحديث الرقم فوراً
                         liveCounter++;
-                        totalViewersCount += viewers;
+                        totalViewersCount += data.viewers;
                     } else {
                         updateCardUI(streamer, false, 0);
                     }
                 }
             } catch (e) {
-                console.log(`Failed to check ${streamer.username}:`, e);
-                updateCardUI(streamer, false, 0);
+                // console.log(e);
             }
         });
+
         await Promise.all(promises);
-        await new Promise(r => setTimeout(r, 500));
+        await new Promise(r => setTimeout(r, 200)); 
     }
     
     document.getElementById('live-count').innerText = liveCounter;
     document.getElementById('total-viewers').innerText = totalViewersCount.toLocaleString();
-    applyFilters();
     
-    // 🔥 البحث عن التوب وتطبيقه بعد انتهاء الفحص 🔥
-    findAndHighlightTop();
+    findAndHighlightTop(); // تحديث التوب بعد كل دورة
+    reorderGrid(); // إعادة الترتيب
 }
 
-// إنشاء البطاقة
+// ==========================================
+// 4. دوال التحديث والرسم (UI)
+// ==========================================
+
 function createCardElement(s, isLive, viewers) {
     const card = document.createElement('div');
     card.className = `card ${isLive ? 'online-card' : 'offline-card'}`;
     card.onclick = () => window.open(`https://kick.com/${s.username}`, '_blank');
+    
     card.dataset.live = isLive ? "1" : "0";
     card.dataset.viewers = viewers;
     card.dataset.category = JSON.stringify(s.category).toLowerCase(); 
@@ -195,17 +187,18 @@ function createCardElement(s, isLive, viewers) {
             </div>
             <img src="${s.image}" class="streamer-img ${isLive ? 'pulse' : ''}" loading="lazy" alt="${s.name}">
         </div>
+        
         <div class="card-footer">
             <div class="status-badge ${isLive ? 'status-on' : 'status-off'}">
                 <span class="dot ${isLive ? '' : 'dot-red'}">●</span> ${isLive ? 'مباشر 🔥' : 'غير متصل'}
             </div>
-            ${isLive ? `<div class="viewers"><i class="fa-solid fa-eye"></i> ${viewers.toLocaleString()}</div>` : ''}
+            ${isLive ? `<div class="viewers-count"><i class="fa-regular fa-eye"></i> ${viewers.toLocaleString()}</div>` : ''}
         </div>
     `;
     return card;
 }
 
-// تحديث الواجهة
+// دالة التحديث الذكية (تغير الأرقام بدون وميض)
 function updateCardUI(s, isLive, viewers) {
     const card = document.getElementById(`card-${s.username}`);
     if (!card) return;
@@ -213,7 +206,7 @@ function updateCardUI(s, isLive, viewers) {
     card.dataset.live = isLive ? "1" : "0";
     card.dataset.viewers = viewers;
 
-    // إزالة التاج والإطار الذهبي عند التحديث العادي
+    // إزالة التاج والإطار الذهبي (سيعاد وضعهم في دالة التوب)
     card.classList.remove('top-streamer-card');
     const crown = card.querySelector('.crown-icon');
     if(crown) crown.remove();
@@ -227,13 +220,15 @@ function updateCardUI(s, isLive, viewers) {
         badge.className = 'status-badge status-on';
         badge.innerHTML = '<span class="dot">●</span> مباشر 🔥';
         
-        let vDiv = card.querySelector('.viewers');
+        // تحديث رقم المشاهدات
+        let vDiv = card.querySelector('.viewers-count');
         if(!vDiv) {
             vDiv = document.createElement('div');
-            vDiv.className = 'viewers';
+            vDiv.className = 'viewers-count';
             card.querySelector('.card-footer').appendChild(vDiv);
         }
         vDiv.innerHTML = `<i class="fa-solid fa-eye"></i> ${viewers.toLocaleString()}`;
+        
     } else {
         card.classList.remove('online-card');
         card.classList.add('offline-card');
@@ -243,20 +238,17 @@ function updateCardUI(s, isLive, viewers) {
         badge.className = 'status-badge status-off';
         badge.innerHTML = '<span class="dot dot-red">●</span> غير متصل';
         
-        const vDiv = card.querySelector('.viewers');
+        const vDiv = card.querySelector('.viewers-count');
         if(vDiv) vDiv.remove();
     }
 }
 
-// =========================================================
-// 🔥 دالة البحث عن الستريمر التوب وتمييزه 🔥
-// =========================================================
+// دالة تحديد التوب
 function findAndHighlightTop() {
     const cards = Array.from(document.querySelectorAll('.card'));
     let maxViewers = -1;
     let topCard = null;
 
-    // البحث عن صاحب أعلى مشاهدات بين اللايف
     cards.forEach(card => {
         if(card.dataset.live === "1") {
             const viewers = parseInt(card.dataset.viewers);
@@ -267,28 +259,50 @@ function findAndHighlightTop() {
         }
     });
 
-    // تطبيق الستايل الذهبي على التوب
     if(topCard && maxViewers > 0) {
         topCard.classList.add('top-streamer-card');
-        
-        // إضافة أيقونة التاج بجانب الاسم
         const nameHeader = topCard.querySelector('.streamer-info h3');
         if(!nameHeader.querySelector('.crown-icon')) {
              nameHeader.innerHTML += ` <span class="crown-icon">👑</span>`;
         }
-
-        // تغيير الشارة إلى "الأكثر مشاهدة"
         const badge = topCard.querySelector('.status-badge');
         badge.className = 'status-badge status-top';
         badge.innerHTML = 'الأكثر مشاهدة 👑';
     }
 }
 
-// الفلاتر
+function reorderGrid() {
+    const grid = document.getElementById('streamer-grid');
+    const cards = Array.from(grid.children);
+
+    cards.sort((a, b) => {
+        // التوب دائماً الأول
+        const isTopA = a.classList.contains('top-streamer-card');
+        const isTopB = b.classList.contains('top-streamer-card');
+        if (isTopA && !isTopB) return -1;
+        if (!isTopA && isTopB) return 1;
+
+        const liveA = parseInt(a.dataset.live);
+        const liveB = parseInt(b.dataset.live);
+        const viewA = parseInt(a.dataset.viewers);
+        const viewB = parseInt(b.dataset.viewers);
+        
+        if (liveA !== liveB) return liveB - liveA;
+        return viewB - viewA;
+    });
+    
+    cards.forEach(card => grid.appendChild(card));
+}
+
+function formatCategory(cat) {
+    if (Array.isArray(cat)) return cat.join(' - ');
+    return cat;
+}
+
+// القائمة المنسدلة
 function toggleDropdown() {
     document.getElementById('catDropdown').classList.toggle('show');
 }
-
 window.onclick = function(event) {
     if (!event.target.matches('.dropdown-btn') && !event.target.matches('.dropdown-btn *')) {
         var dropdowns = document.getElementsByClassName("dropdown-content");
@@ -303,6 +317,8 @@ window.onclick = function(event) {
 function filterCategory(cat) {
     activeCategory = cat.toLowerCase();
     const btnText = document.querySelector('.dropdown-btn span');
+    
+    // تحديث نص الزر حسب الفئة المختارة
     const names = {
         'all': 'تصنيف الفئات',
         'police': 'الشرطة',
@@ -315,6 +331,7 @@ function filterCategory(cat) {
         'عصابة الشرق': 'عصابة الشرق',
         'citizen': 'مواطنين'
     };
+    
     btnText.innerText = names[activeCategory] || cat;
     applyFilters();
 }
@@ -345,24 +362,8 @@ function applyFilters() {
             card.style.display = 'none';
         }
     });
-    
-    cards.sort((a, b) => {
-        // ترتيب التوب أولاً
-        const isTopA = a.classList.contains('top-streamer-card');
-        const isTopB = b.classList.contains('top-streamer-card');
-        if (isTopA && !isTopB) return -1;
-        if (!isTopA && isTopB) return 1;
-
-        const liveA = parseInt(a.dataset.live);
-        const liveB = parseInt(b.dataset.live);
-        const viewA = parseInt(a.dataset.viewers);
-        const viewB = parseInt(b.dataset.viewers);
-        
-        if (liveA !== liveB) return liveB - liveA;
-        return viewB - viewA;
-    });
-    
-    cards.forEach(card => grid.appendChild(card));
+    // إعادة الترتيب بعد الفلترة
+    reorderGrid();
 }
 
 function searchStreamers() {
