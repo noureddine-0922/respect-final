@@ -70,7 +70,7 @@ exports.handler = async function(event, context) {
         return {
             statusCode: 200, // نرجع 200 عشان ما يعلق الموقع، بس نقول إنه أوفلاين
             headers: { "Access-Control-Allow-Origin": "*" },
-            body: JSON.stringify({ isLive: false, viewers: 0 })
+            body: JSON.stringify({ isLive: false, viewers: 0, debug_error: error.message })
         };
     }
 };
