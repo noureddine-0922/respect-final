@@ -139,8 +139,7 @@ async function checkAllStreamers() {
         
         const promises = batch.map(async (streamer) => {
             try {
-                // ✅ العودة لاستخدام البروكسي المباشر الذي نجح سابقاً
-                // إضافة ?t= للرابط لمنع المتصفح من حفظ النتيجة القديمة (الكاش)
+                // إضافة timestamp لمنع الكاش
                 const proxyUrl = `https://corsproxy.io/?https://kick.com/api/v1/channels/${streamer.username}?t=${Date.now()}`;
                 
                 const response = await fetch(proxyUrl);
@@ -164,7 +163,6 @@ async function checkAllStreamers() {
                 }
             } catch (e) {
                 console.log(`Failed to check ${streamer.username}:`, e);
-                // لا نغير الحالة للأوفلاين فوراً عند الخطأ لتجنب الرمش، إلا إذا أردت ذلك
             }
         });
 
@@ -175,8 +173,8 @@ async function checkAllStreamers() {
     document.getElementById('live-count').innerText = liveCounter;
     document.getElementById('total-viewers').innerText = totalViewersCount.toLocaleString();
     
-    findAndHighlightTop(); // تحديث التوب بعد كل دورة
-    reorderGrid(); // إعادة الترتيب
+    findAndHighlightTop(); // تحديث التوب
+    applyFilters(); // 🔥 تحديث الفلاتر لإخفاء/إظهار البطاقات حسب الحالة الجديدة 🔥
 }
 
 // ==========================================
@@ -222,7 +220,6 @@ function updateCardUI(s, isLive, viewers) {
     card.dataset.live = isLive ? "1" : "0";
     card.dataset.viewers = viewers;
 
-    // إزالة التاج والإطار الذهبي (سيعاد وضعهم في دالة التوب)
     card.classList.remove('top-streamer-card');
     const crown = card.querySelector('.crown-icon');
     if(crown) crown.remove();
@@ -236,7 +233,6 @@ function updateCardUI(s, isLive, viewers) {
         badge.className = 'status-badge status-on';
         badge.innerHTML = '<span class="dot">●</span> مباشر 🔥';
         
-        // تحديث رقم المشاهدات
         let vDiv = card.querySelector('.viewers-count');
         if(!vDiv) {
             vDiv = document.createElement('div');
@@ -334,7 +330,6 @@ function filterCategory(cat) {
     activeCategory = cat.toLowerCase();
     const btnText = document.querySelector('.dropdown-btn span');
     
-    // تحديث نص الزر حسب الفئة المختارة
     const names = {
         'all': 'تصنيف الفئات',
         'police': 'الشرطة',
@@ -378,7 +373,6 @@ function applyFilters() {
             card.style.display = 'none';
         }
     });
-    // إعادة الترتيب بعد الفلترة
     reorderGrid();
 }
 
