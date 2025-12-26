@@ -1,5 +1,5 @@
 // ==========================================
-// 1. البيانات
+// 1. البيانات (تم تحديث الصور والأسماء)
 // ==========================================
 const streamersList = [
   { "id": 1, "name": "S5B", "icName": "ماثيو ستانلي", "username": "s5b", "image": "https://files.kick.com/images/user/5543715/profile_image/conversion/0f18fe5a-ccaf-4fc9-b6b4-fb6d953c7952-fullsize.webp", "category": "citizen" },
@@ -8,7 +8,7 @@ const streamersList = [
   { "id": 4, "name": "Drb7h", "icName": "كافح المكافح", "username": "drb7h", "image": "https://files.kick.com/images/user/4434632/profile_image/conversion/26516e13-f362-4f7d-8b16-f458b5414f3c-fullsize.webp", "category": "police" },
   { "id": 5, "name": "itsD70", "icName": "بوليلو", "username": "itsd70", "image": "https://files.kick.com/images/user/5950524/profile_image/conversion/acb54af5-efcb-4b5a-bcc5-e1824fe61676-fullsize.webp", "category": "gangs" },
   { "id": 6, "name": "aboali62", "icName": "علي عامر", "username": "aboali62", "image": "https://files.kick.com/images/user/50078315/profile_image/conversion/21a0677b-8092-4834-929f-9066ef4899f4-fullsize.webp", "category": "police" },
-  { "id": 7, "name": "i2Reap", "icName": "عبد الودود البرماوي", "username": "i2reap", "image": "https://files.kick.com/images/user/5796065/profile_image/conversion/99da65f7-625f-408b-bc85-4328a64d9bf4-fullsize.webp", "category": "citizen" },
+  { "id": 7, "name": "i2Reap", "icName": "عبد الودود البرماوي", "username": "i2reap", "image": "https://files.kick.com/images/user/1154012/profile_image/conversion/ceae6396-b57e-465c-9071-171e69d558ec-fullsize.webp", "category": "citizen" },
   { "id": 8, "name": "taf86", "icName": "صقر ال عبيد", "username": "taf86", "image": "https://files.kick.com/images/user/7364286/profile_image/conversion/474b770c-3110-4683-a732-8f9582b7de49-fullsize.webp", "category": "عائلة عبيد" },
   { "id": 9, "name": "taemor", "icName": "مصطفى سداح", "username": "taemor", "image": "https://files.kick.com/images/user/19779361/profile_image/conversion/2f0f0e7c-b58c-4ed5-a7ab-359ec1894320-fullsize.webp", "category": "عائلة الياكوزا" },
   { "id": 10, "name": "sayko_911", "icName": "حربي الزير", "username": "sayko_911", "image": "https://files.kick.com/images/user/16694172/profile_image/conversion/cbc3a87b-892f-40cb-a2f0-a4ef013425f6-fullsize.webp", "category": "عائلة الياكوزا" },
@@ -85,6 +85,15 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if(bar) bar.style.width = `${progress}%`;
     }, 1000);
+    
+    // شاشة التحميل الفنية
+    setTimeout(() => {
+        const loader = document.getElementById('image-loader');
+        if(loader) {
+            loader.classList.add('loader-hidden');
+            setTimeout(() => loader.remove(), 1000);
+        }
+    }, 4000);
 });
 
 // الخلفية المتحركة (شعار)
@@ -100,8 +109,6 @@ function createParticles() {
         p.style.width = `${size}px`;
         p.style.height = `${size}px`;
         
-        // لا نحتاج لون خلفية هنا لأننا وضعنا صورة في CSS
-        // نغير الشفافية فقط
         p.style.opacity = Math.random() * 0.5 + 0.1;
         
         p.style.left = `${Math.random() * 100}%`;
@@ -247,7 +254,7 @@ function filterCategory(cat) {
     const btnText = document.querySelector('.dropdown-btn span');
     
     // تحديث نص الزر حسب الفئة المختارة
-    const names = {
+   const names = {
         'all': 'تصنيف الفئات',
         'police': 'الشرطة',
         's.ops': 'قوات خاصة',
