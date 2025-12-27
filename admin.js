@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, addDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, setDoc, addDoc, updateDoc, deleteDoc, getDoc, query, orderBy, limit, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-// إعدادات فايربيس (نفس الموجودة في main.js)
 const firebaseConfig = {
     apiKey: "AIzaSyBjEc-wdY6s6v0AiVg4texFrohLwDcdaiU",
     authDomain: "respect-db-d1320.firebaseapp.com",
@@ -13,225 +13,294 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const streamersCol = collection(db, "streamers");
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
 
+// متغيرات عامة
+let currentUserData = null; // لتخزين بيانات الأدمن الحالي
 let isEditing = false;
 let currentEditId = null;
-let deleteTargetId = null;
 
 // ==========================================
-// 1. نظام التنبيهات (Toasts) 🍞
+// 1. نظام تسجيل الدخول والصلاحيات 🔐
 // ==========================================
-function showToast(message, type = 'success') {
-    const container = document.getElementById('toast-container');
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.innerHTML = type === 'success' ? `<i class="fa-solid fa-check-circle"></i> ${message}` : `<i class="fa-solid fa-triangle-exclamation"></i> ${message}`;
+window.loginWithGoogle = async () => {
+    try {
+        const result = await signInWithPopup(auth, provider);
+        checkAdminAccess(result.user);
+    } catch (error) {
+        document.getElementById('loginError').innerText = "خطأ في التسجيل: " + error.message;
+        document.getElementById('loginError').style.display = 'block';
+    }
+};
+
+async function checkAdminAccess(user) {
+    // البحث عن الإيميل في كوليكشن admins
+    const q = query(collection(db, "admins"), where("email", "==", user.email));
+    const querySnapshot = await getDocs(q);
+
+    if (!querySnapshot.empty) {
+        // المستخدم موجود كأدمن
+        const docData = querySnapshot.docs[0].data();
+        currentUserData = { ...docData, uid: user.uid, photoURL: user.photoURL };
+        
+        // إعداد الواجهة حسب الرتبة
+        setupUI(currentUserData);
+        
+        document.getElementById('loginOverlay').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'flex';
+        
+        // تسجيل دخول في اللوغ
+        logAction("تسجيل دخول", "قام بتسجيل الدخول للوحة");
+
+        // تحميل البيانات
+        loadStreamers();
+        if(currentUserData.role === 'owner') {
+            loadMaintenanceState();
+            loadLogs();
+        }
+    } else {
+        // ليس أدمن
+        await signOut(auth);
+        document.getElementById('loginError').innerText = "⛔ عذراً، ليس لديك صلاحية الوصول.";
+        document.getElementById('loginError').style.display = 'block';
+    }
+}
+
+function setupUI(userData) {
+    document.getElementById('userName').innerText = userData.name || "أدمن";
+    document.getElementById('userAvatar').src = userData.photoURL || "https://via.placeholder.com/60";
     
-    container.appendChild(toast);
+    const roleBadge = document.getElementById('userRole');
+    if (userData.role === 'owner') {
+        roleBadge.innerText = "👑 المالك (Owner)";
+        roleBadge.className = "role-badge role-owner";
+        // إظهار كل الأزرار
+        document.getElementById('btnMaintenance').style.display = 'flex';
+        document.getElementById('btnLogs').style.display = 'flex';
+    } else {
+        roleBadge.innerText = "🛠️ مشرف (Admin)";
+        roleBadge.className = "role-badge role-admin";
+        // إخفاء أزرار المالك
+        document.getElementById('btnMaintenance').style.display = 'none';
+        document.getElementById('btnLogs').style.display = 'none';
+    }
+}
+
+window.logout = () => {
+    signOut(auth).then(() => window.location.reload());
+};
+
+// ==========================================
+// 2. نظام التبويبات (Tabs) 📑
+// ==========================================
+window.switchTab = (tabName) => {
+    // إخفاء كل المحتويات
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
     
-    // تفعيل الأنيميشن
-    setTimeout(() => toast.classList.add('show'), 100);
-    // الإخفاء والحذف
-    setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
+    // إظهار المحدد
+    document.getElementById(`tab-${tabName}`).classList.add('active');
+    
+    // تفعيل الزر في القائمة
+    // (بحث بسيط لتفعيل الزر المناسب)
+    if(tabName === 'streamers') document.querySelector('button[onclick*="streamers"]').classList.add('active');
+    if(tabName === 'maintenance') document.querySelector('button[onclick*="maintenance"]').classList.add('active');
+    if(tabName === 'logs') document.querySelector('button[onclick*="logs"]').classList.add('active');
+};
+
+// ==========================================
+// 3. نظام السجلات (Logging System) 📝
+// ==========================================
+async function logAction(action, details) {
+    if(!currentUserData) return;
+    try {
+        await addDoc(collection(db, "logs"), {
+            adminName: currentUserData.name,
+            adminEmail: currentUserData.email,
+            role: currentUserData.role,
+            action: action,
+            details: details,
+            timestamp: new Date()
+        });
+        if(currentUserData.role === 'owner') loadLogs(); // تحديث فوري للمالك
+    } catch(e) { console.error("Log error", e); }
+}
+
+async function loadLogs() {
+    const tbody = document.getElementById('logsBody');
+    try {
+        const q = query(collection(db, "logs"), orderBy("timestamp", "desc"), limit(50));
+        const snapshot = await getDocs(q);
+        
+        tbody.innerHTML = '';
+        snapshot.forEach(doc => {
+            const log = doc.data();
+            const date = log.timestamp.toDate().toLocaleString('ar-SA');
+            const row = `
+                <tr>
+                    <td style="direction:ltr">${date}</td>
+                    <td>${log.adminName}</td>
+                    <td><span class="role-badge ${log.role === 'owner' ? 'role-owner' : 'role-admin'}">${log.role}</span></td>
+                    <td style="color:var(--neon-green)">${log.action}</td>
+                    <td style="color:#ccc">${log.details}</td>
+                </tr>
+            `;
+            tbody.innerHTML += row;
+        });
+    } catch(e) { tbody.innerHTML = '<tr><td colspan="5">فشل تحميل السجلات</td></tr>'; }
 }
 
 // ==========================================
-// 2. السحب التلقائي (Auto Fetch) 🤖
+// 4. نظام الصيانة (Maintenance) 🚧
+// ==========================================
+async function loadMaintenanceState() {
+    try {
+        const docSnap = await getDoc(doc(db, "settings", "config"));
+        if (docSnap.exists()) {
+            const isMaint = docSnap.data().maintenance;
+            document.getElementById('maintenanceSwitch').checked = isMaint;
+            updateMaintText(isMaint);
+        }
+    } catch(e) {}
+}
+
+window.toggleMaintenance = async () => {
+    if(currentUserData.role !== 'owner') {
+        alert("غير مسموح لك بهذا الإجراء!");
+        return;
+    }
+    const isChecked = document.getElementById('maintenanceSwitch').checked;
+    updateMaintText(isChecked);
+    
+    try {
+        await setDoc(doc(db, "settings", "config"), { maintenance: isChecked }, { merge: true });
+        showToast(isChecked ? "تم تفعيل وضع الصيانة" : "تم إيقاف وضع الصيانة");
+        logAction("تغيير حالة الصيانة", isChecked ? "تفعيل" : "إيقاف");
+    } catch(e) {
+        showToast("فشل التغيير", "error");
+    }
+};
+
+function updateMaintText(status) {
+    const txt = document.getElementById('maintStatus');
+    txt.innerText = status ? "الوضع: 🔴 مفعل (الموقع مغلق)" : "الوضع: 🟢 معطل (الموقع يعمل)";
+    txt.style.color = status ? "#da3633" : "#28a745";
+}
+
+// ==========================================
+// 5. إدارة الستريمرز (نفس المنطق القديم)
 // ==========================================
 window.autoFetchData = async () => {
     const username = document.getElementById('inpUsername').value.trim();
-    if (!username) { showToast("يرجى كتابة اليوزر نيم أولاً", "error"); return; }
-
-    const btn = document.querySelector('.btn-fetch');
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الجلب...';
-
+    if(!username) return;
     try {
-        // نستخدم API كيك العام
-        const response = await fetch(`https://kick.com/api/v1/channels/${username}`);
-        if (!response.ok) throw new Error("لم يتم العثور على القناة");
-        
-        const data = await response.json();
-        
-        // تعبئة البيانات تلقائياً
-        document.getElementById('inpName').value = data.user.username; // الاسم
-        
-        // محاولة جلب الصورة (أحياناً تكون في user.profile_pic)
-        let imgUrl = data.user.profile_pic;
-        if(!imgUrl || imgUrl.includes('default')) imgUrl = "https://via.placeholder.com/150"; 
-        document.getElementById('inpImage').value = imgUrl;
-
-        showToast("تم سحب البيانات بنجاح!", "success");
-        updatePreview(); // تحديث المعاينة
-
-    } catch (error) {
-        console.error(error);
-        showToast("فشل السحب التلقائي (تأكد من اليوزر أو عبئ يدوياً)", "error");
-    } finally {
-        btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i> جلب';
-    }
+        const res = await fetch(`https://kick.com/api/v1/channels/${username}`);
+        const data = await res.json();
+        document.getElementById('inpName').value = data.user.username;
+        let img = data.user.profile_pic;
+        if(!img || img.includes('default')) img = "https://via.placeholder.com/150";
+        document.getElementById('inpImage').value = img;
+        window.updatePreview();
+        showToast("تم الجلب!");
+    } catch(e) { showToast("فشل الجلب", "error"); }
 };
 
-// ==========================================
-// 3. المعاينة الحية (Live Preview) 👁️
-// ==========================================
 window.updatePreview = () => {
-    const name = document.getElementById('inpName').value || "الاسم";
-    const icName = document.getElementById('inpICName').value || "الشخصية";
-    const img = document.getElementById('inpImage').value || "https://via.placeholder.com/150";
-    
-    document.getElementById('prevName').innerText = name;
-    document.getElementById('prevIC').innerText = icName;
-    document.getElementById('prevImg').src = img;
+    document.getElementById('prevName').innerText = document.getElementById('inpName').value || "الاسم";
+    document.getElementById('prevIC').innerText = document.getElementById('inpICName').value || "الشخصية";
+    document.getElementById('prevImg').src = document.getElementById('inpImage').value || "https://via.placeholder.com/150";
 };
 
-// ==========================================
-// 4. إدارة البيانات (CRUD) 💾
-// ==========================================
-
-// تحميل القائمة
-async function loadStreamers() {
-    const listContainer = document.getElementById('streamerList');
-    listContainer.innerHTML = '<div style="text-align:center; margin-top:20px;"><i class="fa-solid fa-spinner fa-spin"></i> جاري التحميل...</div>';
-    
-    try {
-        const snapshot = await getDocs(streamersCol);
-        listContainer.innerHTML = '';
-        
-        if(snapshot.empty) {
-            listContainer.innerHTML = '<div style="text-align:center; color:#777;">لا يوجد ستريمرز مضافين.</div>';
-            return;
-        }
-
-        snapshot.forEach(docSnap => {
-            const s = docSnap.data();
-            const div = document.createElement('div');
-            div.className = 'list-item';
-            div.innerHTML = `
-                <div class="list-info">
-                    <img src="${s.image}" class="list-img" onerror="this.src='https://via.placeholder.com/150'">
-                    <div>
-                        <div style="font-weight:bold; color:white;">${s.name}</div>
-                        <div style="font-size:0.8rem; color:#888;">${s.username} | ${s.category}</div>
-                    </div>
-                </div>
-                <div class="list-actions">
-                    <button class="btn-edit" onclick="editStreamer('${docSnap.id}', '${s.username}', '${s.name}', '${s.icName}', '${s.image}', '${s.category}')">
-                        <i class="fa-solid fa-pen"></i>
-                    </button>
-                    <button class="btn-delete" onclick="openDeleteModal('${docSnap.id}')">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
-                </div>
-            `;
-            listContainer.appendChild(div);
-        });
-    } catch (err) {
-        showToast("خطأ في تحميل القائمة: " + err.message, "error");
-    }
-}
-
-// حفظ (إضافة أو تعديل)
 window.saveStreamer = async () => {
-    const username = document.getElementById('inpUsername').value.trim();
-    const name = document.getElementById('inpName').value.trim();
-    const icName = document.getElementById('inpICName').value.trim();
-    const image = document.getElementById('inpImage').value.trim();
+    const username = document.getElementById('inpUsername').value;
+    const name = document.getElementById('inpName').value;
+    const icName = document.getElementById('inpICName').value;
+    const image = document.getElementById('inpImage').value;
     const category = document.getElementById('inpCategory').value;
 
-    if (!username || !name) {
-        showToast("يرجى تعبئة الحقول الأساسية (اليوزر والاسم)", "error");
-        return;
-    }
-
-    const btn = document.querySelector('.btn-save');
-    const oldText = btn.innerHTML;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...';
-    btn.disabled = true;
+    if(!username || !name) { showToast("ناقص بيانات!", "error"); return; }
 
     try {
         const data = { username, name, icName, image, category };
-        
-        if (isEditing && currentEditId) {
-            // تعديل
+        if(isEditing && currentEditId) {
             await updateDoc(doc(db, "streamers", currentEditId), data);
-            showToast("تم التعديل بنجاح ✅");
+            showToast("تم التعديل");
+            logAction("تعديل ستريمر", `تعديل بيانات: ${name}`);
         } else {
-            // إضافة جديد
-            await addDoc(streamersCol, data);
-            showToast("تمت الإضافة بنجاح ✅");
+            await addDoc(collection(db, "streamers"), data);
+            showToast("تمت الإضافة");
+            logAction("إضافة ستريمر", `إضافة: ${name} (${category})`);
         }
-        
+        loadStreamers();
         clearForm();
-        loadStreamers();
-    } catch (err) {
-        console.error(err);
-        showToast("حدث خطأ أثناء الحفظ", "error");
-    } finally {
-        btn.innerHTML = oldText;
-        btn.disabled = false;
-    }
+    } catch(e) { showToast("خطأ", "error"); }
 };
 
-// تجهيز الفورم للتعديل
-window.editStreamer = (id, username, name, icName, image, category) => {
-    isEditing = true;
-    currentEditId = id;
-    
-    document.getElementById('inpUsername').value = username;
+async function loadStreamers() {
+    const list = document.getElementById('streamerList');
+    list.innerHTML = 'جاري التحميل...';
+    const snap = await getDocs(collection(db, "streamers"));
+    list.innerHTML = '';
+    snap.forEach(d => {
+        const s = d.data();
+        list.innerHTML += `
+            <div style="display:flex; justify-content:space-between; align-items:center; background:#0d1117; padding:10px; margin-bottom:5px; border-radius:5px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <img src="${s.image}" width="40" style="border-radius:50%">
+                    <div><b>${s.name}</b><br><small style="color:#888">${s.category}</small></div>
+                </div>
+                <div>
+                    <button onclick="editStreamer('${d.id}', '${s.username}', '${s.name}', '${s.icName}', '${s.image}', '${s.category}')" style="background:#1f6feb; border:none; color:white; padding:5px; border-radius:3px;">✏️</button>
+                    <button onclick="deleteStreamer('${d.id}', '${s.name}')" style="background:#da3633; border:none; color:white; padding:5px; border-radius:3px;">🗑️</button>
+                </div>
+            </div>
+        `;
+    });
+}
+
+window.editStreamer = (id, user, name, ic, img, cat) => {
+    isEditing = true; currentEditId = id;
+    document.getElementById('inpUsername').value = user;
     document.getElementById('inpName').value = name;
-    document.getElementById('inpICName').value = icName;
-    document.getElementById('inpImage').value = image;
-    document.getElementById('inpCategory').value = category;
-    
-    document.querySelector('.btn-save').innerHTML = '<i class="fa-solid fa-rotate"></i> تحديث البيانات';
-    updatePreview();
-    
-    // سكرول للأعلى (للجوال)
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    showToast("أنت الآن في وضع التعديل", "success");
+    document.getElementById('inpICName').value = ic;
+    document.getElementById('inpImage').value = img;
+    document.getElementById('inpCategory').value = cat;
+    window.updatePreview();
+    window.scrollTo({top:0, behavior:'smooth'});
 };
 
-// تنظيف الفورم
+window.deleteStreamer = async (id, name) => {
+    if(!confirm("حذف نهائي؟")) return;
+    await deleteDoc(doc(db, "streamers", id));
+    logAction("حذف ستريمر", `حذف: ${name}`);
+    loadStreamers();
+};
+
 window.clearForm = () => {
-    isEditing = false;
-    currentEditId = null;
-    document.querySelectorAll('input').forEach(i => i.value = '');
-    document.getElementById('inpCategory').selectedIndex = 0;
-    document.querySelector('.btn-save').innerHTML = '<i class="fa-solid fa-floppy-disk"></i> حفظ البيانات';
-    updatePreview();
+    isEditing = false; currentEditId = null;
+    document.querySelectorAll('input').forEach(i=>i.value='');
+    window.updatePreview();
 };
 
-// ==========================================
-// 5. نافذة الحذف (Confirmations) 🗑️
-// ==========================================
-window.openDeleteModal = (id) => {
-    deleteTargetId = id;
-    document.getElementById('confirmModal').style.display = 'flex';
-};
+function showToast(msg, type='success') {
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.style.background = type === 'success' ? 'var(--neon-green)' : '#da3633';
+    t.style.color = type === 'success' ? 'black' : 'white';
+    t.style.padding = '10px 20px'; t.style.borderRadius = '20px';
+    t.innerText = msg;
+    document.getElementById('toast-container').appendChild(t);
+    setTimeout(()=>t.remove(), 3000);
+}
 
-window.closeConfirmModal = () => {
-    deleteTargetId = null;
-    document.getElementById('confirmModal').style.display = 'none';
-};
-
-window.confirmDeleteAction = async () => {
-    if (!deleteTargetId) return;
-    
-    try {
-        await deleteDoc(doc(db, "streamers", deleteTargetId));
-        showToast("تم الحذف بنجاح 🗑️");
-        loadStreamers();
-    } catch (err) {
-        showToast("خطأ في الحذف", "error");
-    } finally {
-        closeConfirmModal();
+// التحقق من حالة الدخول عند الفتح
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        checkAdminAccess(user);
+    } else {
+        document.getElementById('loginOverlay').style.display = 'flex';
+        document.getElementById('dashboard').style.display = 'none';
     }
-};
-
-// تشغيل القائمة عند الفتح
-loadStreamers();
+});
 

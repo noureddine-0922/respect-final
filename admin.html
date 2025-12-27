@@ -3,199 +3,251 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم | Respect Admin</title>
+    <title>لوحة القيادة | Respect Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css"> <style>
-        /* تنسيقات خاصة بالأدمن */
-        body { padding-bottom: 50px; }
-        .admin-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            padding: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
+    <link rel="stylesheet" href="style.css">
+    
+    <style>
+        /* تنسيقات خاصة بلوحة القيادة */
+        body { background: #0d1117; color: white; overflow-x: hidden; }
         
-        /* قسم النموذج والمعاينة */
-        .admin-panel {
-            background: #161b22;
-            padding: 20px;
-            border-radius: 15px;
-            border: 1px solid #30363d;
-        }
-
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; color: #8b949e; }
-        .form-group input, .form-group select {
-            width: 100%; padding: 10px; background: #0d1117; border: 1px solid #30363d;
-            color: white; border-radius: 5px; font-family: 'Cairo';
-        }
-        
-        .btn-fetch {
-            background: var(--neon-purple); color: white; border: none; padding: 5px 10px;
-            border-radius: 5px; cursor: pointer; font-size: 0.8rem; margin-top: 5px;
-        }
-
-        .action-btns { display: flex; gap: 10px; margin-top: 20px; }
-        .btn-save { flex: 2; background: var(--neon-green); color: black; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .btn-clear { flex: 1; background: #30363d; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; }
-
-        /* قائمة الستريمرز */
-        .streamer-list {
-            background: #161b22;
-            padding: 20px;
-            border-radius: 15px;
-            border: 1px solid #30363d;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-        .list-item {
-            display: flex; align-items: center; justify-content: space-between;
-            background: #0d1117; padding: 10px; margin-bottom: 10px; border-radius: 8px;
-            border: 1px solid #30363d;
-        }
-        .list-info { display: flex; align-items: center; gap: 10px; }
-        .list-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
-        .list-actions button {
-            border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; margin-left: 5px;
-        }
-        .btn-edit { background: #1f6feb; color: white; }
-        .btn-delete { background: #da3633; color: white; }
-
-        /* المعاينة الحية */
-        .preview-area {
-            margin-top: 20px; padding-top: 20px; border-top: 1px dashed #30363d;
-            text-align: center;
-        }
-        .preview-label { color: var(--neon-green); margin-bottom: 10px; display: block; }
-
-        /* نافذة التأكيد (Modal) */
-        .confirm-modal {
+        /* شاشة تسجيل الدخول */
+        #loginOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000;
+            background: #0d1117; z-index: 9999; display: flex;
+            flex-direction: column; justify-content: center; align-items: center;
         }
-        .confirm-box {
-            background: #161b22; padding: 20px; border-radius: 10px; text-align: center;
-            border: 1px solid var(--neon-purple);
+        .login-box {
+            background: #161b22; padding: 40px; border-radius: 20px; text-align: center;
+            border: 1px solid #30363d; box-shadow: 0 0 30px rgba(0,0,0,0.5);
         }
-        .confirm-btns { margin-top: 20px; display: flex; gap: 10px; justify-content: center; }
+        .google-btn {
+            background: white; color: black; border: none; padding: 10px 20px;
+            border-radius: 5px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 10px;
+            margin-top: 20px; transition: 0.3s;
+        }
+        .google-btn:hover { background: #ddd; }
 
-        /* التوست (Toasts) */
-        #toast-container {
-            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            display: flex; flex-direction: column; gap: 10px; z-index: 2000;
+        /* التصميم الرئيسي */
+        .dashboard-container { display: flex; min-height: 100vh; display: none; /* مخفي حتى الدخول */ }
+        
+        /* القائمة الجانبية */
+        .sidebar-admin {
+            width: 250px; background: #161b22; padding: 20px; border-left: 1px solid #30363d;
+            display: flex; flex-direction: column;
         }
-        .toast {
-            background: #1f6feb; color: white; padding: 10px 20px; border-radius: 30px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.3s;
-            display: flex; align-items: center; gap: 10px;
+        .user-profile {
+            text-align: center; padding-bottom: 20px; border-bottom: 1px solid #30363d; margin-bottom: 20px;
         }
-        .toast.success { background: var(--neon-green); color: black; }
-        .toast.error { background: #da3633; color: white; }
-        .toast.show { opacity: 1; }
+        .user-avatar { width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--neon-green); margin-bottom: 10px; }
+        .role-badge { 
+            padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold;
+        }
+        .role-owner { background: #da3633; color: white; }
+        .role-admin { background: #1f6feb; color: white; }
 
-        /* تجاوب الجوال */
+        .nav-btn {
+            background: none; border: none; color: #8b949e; padding: 15px; text-align: right;
+            cursor: pointer; font-family: 'Cairo'; font-size: 1rem; border-radius: 8px; transition: 0.3s;
+            display: flex; align-items: center; gap: 10px; width: 100%;
+        }
+        .nav-btn:hover, .nav-btn.active { background: #21262d; color: white; }
+        .nav-btn.active { border-right: 3px solid var(--neon-green); }
+
+        /* منطقة المحتوى */
+        .content-wrapper { flex: 1; padding: 30px; overflow-y: auto; }
+        .tab-content { display: none; animation: fadeIn 0.3s ease; }
+        .tab-content.active { display: block; }
+
+        /* قسم الصيانة */
+        .maintenance-card {
+            background: #161b22; padding: 30px; border-radius: 15px; border: 1px solid #30363d;
+            text-align: center; max-width: 500px; margin: 0 auto;
+        }
+        .toggle-switch {
+            position: relative; display: inline-block; width: 60px; height: 34px; margin: 20px 0;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc; transition: .4s; border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px;
+            background-color: white; transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--neon-green); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        /* جدول السجلات */
+        .logs-table {
+            width: 100%; border-collapse: collapse; background: #161b22; border-radius: 10px; overflow: hidden;
+        }
+        .logs-table th, .logs-table td {
+            padding: 15px; text-align: right; border-bottom: 1px solid #30363d;
+        }
+        .logs-table th { background: #21262d; color: var(--neon-green); }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* نفس تنسيقات الفورم القديمة */
+        .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         @media (max-width: 768px) {
-            .admin-container { grid-template-columns: 1fr; }
-            .preview-area { display: flex; justify-content: center; flex-direction: column; align-items: center; }
+            .dashboard-container { flex-direction: column; }
+            .sidebar-admin { width: 100%; border-left: none; border-bottom: 1px solid #30363d; }
+            .admin-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
 
-    <header class="main-header" style="padding: 10px;">
-        <h1 class="brand-title" style="font-size: 1.5rem;">لوحة التحكم ⚙️</h1>
-    </header>
+    <div id="loginOverlay">
+        <div class="login-box">
+            <img src="https://cdn.discordapp.com/attachments/1436149485167185940/1454355201539702905/logo.png" width="80" style="margin-bottom:20px;">
+            <h2>تسجيل الدخول للأدمن</h2>
+            <p style="color:#888;">يجب أن تمتلك صلاحية للوصول</p>
+            <button class="google-btn" onclick="loginWithGoogle()">
+                <i class="fa-brands fa-google"></i> تسجيل الدخول بجوجل
+            </button>
+            <p id="loginError" style="color:#da3633; margin-top:10px; display:none;"></p>
+        </div>
+    </div>
 
-    <div class="admin-container">
-        <div class="admin-panel">
-            <h3 style="color:white; margin-bottom:15px;">إضافة / تعديل ستريمر</h3>
+    <div class="dashboard-container" id="dashboard">
+        
+        <aside class="sidebar-admin">
+            <div class="user-profile">
+                <img src="" id="userAvatar" class="user-avatar">
+                <h3 id="userName">الاسم</h3>
+                <span id="userRole" class="role-badge">جاري التحميل...</span>
+            </div>
+
+            <nav>
+                <button class="nav-btn active" onclick="switchTab('streamers')">
+                    <i class="fa-solid fa-users"></i> إدارة الستريمرز
+                </button>
+                <button class="nav-btn" onclick="switchTab('maintenance')" id="btnMaintenance">
+                    <i class="fa-solid fa-screwdriver-wrench"></i> وضع الصيانة
+                </button>
+                <button class="nav-btn" onclick="switchTab('logs')" id="btnLogs">
+                    <i class="fa-solid fa-file-shield"></i> سجلات النشاط (Logs)
+                </button>
+                <button class="nav-btn" style="color:#da3633; margin-top:30px;" onclick="logout()">
+                    <i class="fa-solid fa-right-from-bracket"></i> تسجيل خروج
+                </button>
+            </nav>
+        </aside>
+
+        <main class="content-wrapper">
             
-            <div class="form-group">
-                <label>يوزر كيك (Kick Username)</label>
-                <div style="display:flex; gap:5px;">
-                    <input type="text" id="inpUsername" placeholder="مثلاً: xqc" oninput="updatePreview()">
-                    <button class="btn-fetch" onclick="autoFetchData()"><i class="fa-solid fa-cloud-arrow-down"></i> جلب</button>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>الاسم المعروض (Display Name)</label>
-                <input type="text" id="inpName" placeholder="الاسم بالعربي أو الإنجليزي" oninput="updatePreview()">
-            </div>
-
-            <div class="form-group">
-                <label>اسم الشخصية (IC Name)</label>
-                <input type="text" id="inpICName" placeholder="اسم الشخصية في السيرفر" oninput="updatePreview()">
-            </div>
-
-            <div class="form-group">
-                <label>رابط الصورة</label>
-                <input type="text" id="inpImage" placeholder="رابط الصورة" oninput="updatePreview()">
-            </div>
-
-            <div class="form-group">
-                <label>الفئة</label>
-                <select id="inpCategory" onchange="updatePreview()">
-                    <option value="police">الشرطة</option>
-                    <option value="ems">الإسعاف</option>
-                    <option value="justice">العدل</option>
-                    <option value="s.ops">قوات خاصة</option>
-                    <option value="citizen">مواطن</option>
-                    <option value="obeid">عائلة عبيد</option>
-                    <option value="plus">عصابة البلس</option>
-                    <option value="brazil">البرازيليين</option>
-                    <option value="east">عصابة الشرق</option>
-                    <option value="west">عصابة الغرب</option>
-                    <option value="middle">Middle Gang</option>
-                    <option value="nwa">N.W.A</option>
-                    <option value="crypto">Crypto</option>
-                    <option value="yakuza">الياكوزا</option>
-                    <option value="oldschool">Old School</option>
-                </select>
-            </div>
-
-            <div class="action-btns">
-                <button class="btn-save" onclick="saveStreamer()"><i class="fa-solid fa-floppy-disk"></i> حفظ البيانات</button>
-                <button class="btn-clear" onclick="clearForm()"><i class="fa-solid fa-eraser"></i> تنظيف</button>
-            </div>
-
-            <div class="preview-area">
-                <span class="preview-label">معاينة حية (Live Preview)</span>
-                <div class="card" id="previewCard" style="margin: 0 auto; pointer-events: none;">
-                    <div class="flip-wrapper">
-                        <div class="card-inner">
-                            <div class="card-front">
-                                <div class="status-badge offline">معاينة</div>
-                                <img src="https://via.placeholder.com/150" id="prevImg" class="pfp">
-                                <div class="info"><h3 id="prevName">الاسم</h3><p id="prevIC">الشخصية</p></div>
+            <div id="tab-streamers" class="tab-content active">
+                <h2 style="margin-bottom:20px;">🎥 إدارة الستريمرز</h2>
+                <div class="admin-grid">
+                    <div class="admin-panel" style="background:#161b22; padding:20px; border-radius:15px; border:1px solid #30363d;">
+                        <div class="form-group">
+                            <label>يوزر كيك</label>
+                            <div style="display:flex; gap:5px;">
+                                <input type="text" id="inpUsername" placeholder="xqc" oninput="updatePreview()" style="width:100%; padding:10px; background:#0d1117; color:white; border:1px solid #30363d; border-radius:5px;">
+                                <button onclick="autoFetchData()" style="background:var(--neon-purple); border:none; color:white; border-radius:5px; width:60px;">جلب</button>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-top:10px;">
+                            <label>الاسم</label>
+                            <input type="text" id="inpName" oninput="updatePreview()" style="width:100%; padding:10px; background:#0d1117; color:white; border:1px solid #30363d; border-radius:5px;">
+                        </div>
+                        <div class="form-group" style="margin-top:10px;">
+                            <label>الشخصية (IC)</label>
+                            <input type="text" id="inpICName" oninput="updatePreview()" style="width:100%; padding:10px; background:#0d1117; color:white; border:1px solid #30363d; border-radius:5px;">
+                        </div>
+                        <div class="form-group" style="margin-top:10px;">
+                            <label>الصورة</label>
+                            <input type="text" id="inpImage" oninput="updatePreview()" style="width:100%; padding:10px; background:#0d1117; color:white; border:1px solid #30363d; border-radius:5px;">
+                        </div>
+                        <div class="form-group" style="margin-top:10px;">
+                            <label>الفئة</label>
+                            <select id="inpCategory" onchange="updatePreview()" style="width:100%; padding:10px; background:#0d1117; color:white; border:1px solid #30363d; border-radius:5px;">
+                                <option value="police">الشرطة</option>
+                                <option value="ems">الإسعاف</option>
+                                <option value="justice">العدل</option>
+                                <option value="s.ops">قوات خاصة</option>
+                                <option value="citizen">مواطن</option>
+                                <option value="obeid">عائلة عبيد</option>
+                                <option value="plus">عصابة البلس</option>
+                                <option value="brazil">البرازيليين</option>
+                                <option value="east">عصابة الشرق</option>
+                                <option value="west">عصابة الغرب</option>
+                                <option value="middle">Middle Gang</option>
+                                <option value="nwa">N.W.A</option>
+                                <option value="crypto">Crypto</option>
+                                <option value="yakuza">الياكوزا</option>
+                                <option value="oldschool">Old School</option>
+                            </select>
+                        </div>
+                        <div style="margin-top:20px; display:flex; gap:10px;">
+                            <button onclick="saveStreamer()" class="btn-save" style="flex:2; padding:10px; background:var(--neon-green); border:none; border-radius:5px; font-weight:bold; cursor:pointer;">حفظ</button>
+                            <button onclick="clearForm()" style="flex:1; padding:10px; background:#30363d; color:white; border:none; border-radius:5px; cursor:pointer;">جديد</button>
+                        </div>
+                        
+                        <div style="margin-top:20px; padding-top:20px; border-top:1px dashed #30363d; text-align:center;">
+                            <div class="card" id="previewCard" style="margin:0 auto; width:100%; max-width:200px; pointer-events:none;">
+                                <div class="flip-wrapper">
+                                    <div class="card-inner">
+                                        <div class="card-front">
+                                            <div class="status-badge offline">معاينة</div>
+                                            <img src="https://via.placeholder.com/150" id="prevImg" class="pfp">
+                                            <div class="info"><h3 id="prevName">الاسم</h3><p id="prevIC">الشخصية</p></div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
+
+                    <div id="streamerList" style="background:#161b22; padding:20px; border-radius:15px; border:1px solid #30363d; max-height:80vh; overflow-y:auto;">
+                        جاري التحميل...
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="streamer-list" id="streamerList">
-            <div style="text-align:center; color:#888;">جاري التحميل...</div>
-        </div>
-    </div>
-
-    <div id="toast-container"></div>
-
-    <div class="confirm-modal" id="confirmModal">
-        <div class="confirm-box">
-            <i class="fa-solid fa-circle-exclamation" style="font-size:3rem; color:#da3633; margin-bottom:15px;"></i>
-            <h3>هل أنت متأكد؟</h3>
-            <p>سيتم حذف هذا الستريمر نهائياً.</p>
-            <div class="confirm-btns">
-                <button class="btn-delete" onclick="confirmDeleteAction()">نعم، احذف</button>
-                <button class="btn-clear" onclick="closeConfirmModal()">إلغاء</button>
+            <div id="tab-maintenance" class="tab-content">
+                <div class="maintenance-card">
+                    <i class="fa-solid fa-triangle-exclamation" style="font-size:3rem; color:#ffcc00;"></i>
+                    <h2>نظام الصيانة</h2>
+                    <p style="color:#888;">عند تفعيل هذا الوضع، لن يظهر الموقع للزوار وسيتم تحويلهم لصفحة الصيانة.</p>
+                    
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="maintenanceSwitch" onchange="toggleMaintenance()">
+                        <span class="slider"></span>
+                    </label>
+                    <p id="maintStatus" style="font-weight:bold;">الوضع: جاري التحقق...</p>
+                </div>
             </div>
-        </div>
+
+            <div id="tab-logs" class="tab-content">
+                <h2 style="margin-bottom:20px;">🛡️ سجلات الأدمن (Logs)</h2>
+                <div style="overflow-x:auto;">
+                    <table class="logs-table">
+                        <thead>
+                            <tr>
+                                <th>الوقت</th>
+                                <th>الأدمن</th>
+                                <th>الرتبة</th>
+                                <th>الإجراء</th>
+                                <th>التفاصيل</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logsBody">
+                            <tr><td colspan="5" style="text-align:center;">جاري تحميل السجلات...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
     </div>
+
+    <div id="toast-container" style="position:fixed; bottom:20px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; gap:10px; z-index:2000;"></div>
 
     <script type="module" src="admin.js"></script>
 </body>
