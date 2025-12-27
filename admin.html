@@ -30,6 +30,8 @@
         <option value="citizen">مواطن</option>
         <option value="s.ops">قوات خاصة</option>
         <option value="admin">إدارة</option>
+        <option value="عائلة عبيد">عائلة عبيد</option>
+        <option value="عصابة البلس">عصابة البلس</option>
     </select>
     <button onclick="addStreamer()">➕ إضافة للقائمة</button>
 
@@ -41,16 +43,15 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // 🔴🔴 ألصق كود الـ Firebase Config هنا (استبدل هذا الجزء بالكود اللي نسخته) 🔴🔴
+    // ✅✅ إعدادات Firebase المصححة ✅✅
     const firebaseConfig = {
         apiKey: "AIzaSyBjEc-wdY6s6v0AiVg4texFrohLwDcdaiU",
         authDomain: "respect-db-d1320.firebaseapp.com",
-        projectId: "respect-db",
+        projectId: "respect-db-d1320", 
         storageBucket: "respect-db-d1320.firebasestorage.app",
         messagingSenderId: "823436634480",
         appId: "1:823436634480:web:3380974cce87d8e82b07b5"
     };
-    // 🔴🔴 نهاية منطقة اللصق 🔴🔴
 
     // تهيئة Firebase
     const app = initializeApp(firebaseConfig);
@@ -75,6 +76,7 @@
             location.reload();
         } catch (e) {
             alert("خطأ: " + e.message);
+            console.error(e);
         }
     }
 
