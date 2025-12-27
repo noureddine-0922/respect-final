@@ -13,13 +13,12 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
-  console.log('رسالة في الخلفية:', payload);
+  console.log('رسالة خلفية:', payload);
   const notificationTitle = payload.notification.title;
   const notificationOptions = {
     body: payload.notification.body,
-    icon: 'https://cdn.discordapp.com/attachments/1436149485167185940/1454355201539702905/logo.png'
+    icon: '/logo.png' // تأكد من وجود صورة الشعار
   };
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-// Force Update

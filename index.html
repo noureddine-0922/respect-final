@@ -6,11 +6,12 @@
     <title>Respect Streams | ريسبكت ستريمرز</title>
     
     <link rel="manifest" href="manifest.json">
+    
     <meta name="theme-color" content="#0b0e11">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="https://cdn.discordapp.com/attachments/1436149485167185940/1454355201539702905/logo.png?ex=6950c954&is=694f77d4&hm=6f5fd0f1197cc84ffc9d2e18f97efba791ef75b01f7da85a79702ae22778b0b8&">
-    <link rel="icon" type="image/png" href="https://cdn.discordapp.com/attachments/1436149485167185940/1454355201539702905/logo.png?ex=6950c954&is=694f77d4&hm=6f5fd0f1197cc84ffc9d2e18f97efba791ef75b01f7da85a79702ae22778b0b8&">
+    <link rel="apple-touch-icon" href="https://cdn.discordapp.com/attachments/1436149485167185940/1454355201539702905/logo.png">
+    <link rel="icon" type="image/png" href="https://cdn.discordapp.com/attachments/1436149485167185940/1454355201539702905/logo.png">
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
@@ -22,9 +23,9 @@
     <div class="modal-overlay" id="welcomeModal">
         <div class="modal-content">
             <i class="fa-solid fa-xmark modal-close" onclick="closeModal()"></i>
-            <img src="https://cdn.discordapp.com/attachments/1436149485167185940/1454355201539702905/logo.png?ex=6950c954&is=694f77d4&hm=6f5fd0f1197cc84ffc9d2e18f97efba791ef75b01f7da85a79702ae22778b0b8&" alt="Logo" class="modal-logo">
+            <img src="https://cdn.discordapp.com/attachments/1436149485167185940/1454355201539702905/logo.png" alt="Logo" class="modal-logo">
             <h2 style="color:white; margin:0 0 10px 0;">أهلاً بك في ريسبكت!</h2>
-            <p style="color:#ccc;">اشترك في الإشعارات ليصلك تنبيه عند بدء البث!</p>
+            <p style="color:#ccc;">اشترك في الإشعارات وثبت التطبيق ليصلك تنبيه عند بدء البث!</p>
             <a href="https://x.com/streamsrespect" target="_blank" class="modal-btn"><i class="fa-brands fa-x-twitter"></i> تواصل معنا</a>
         </div>
     </div>
@@ -33,7 +34,12 @@
         <div id="notifBtn" class="notif-icon" onclick="subscribeUser()">
             <i class="fa-regular fa-bell"></i>
         </div>
-        <img src="https://cdn.discordapp.com/attachments/1436149485167185940/1454355201539702905/logo.png?ex=6950c954&is=694f77d4&hm=6f5fd0f1197cc84ffc9d2e18f97efba791ef75b01f7da85a79702ae22778b0b8&" alt="Logo" class="logo-img">
+
+        <button id="installBtn" style="display:none; margin-right:15px; padding:8px 15px; background:var(--neon-green); color:black; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">
+            <i class="fa-solid fa-download"></i> تثبيت
+        </button>
+
+        <img src="https://cdn.discordapp.com/attachments/1436149485167185940/1454355201539702905/logo.png" alt="Logo" class="logo-img">
         <h1 class="brand-title">RESPECT STREAMS</h1>
         <p class="brand-subtitle">تابع حالة ستريمرز ريسبكت لحظة بلحظة</p>
         <div class="loading-bar"></div>
@@ -94,9 +100,12 @@
 
     <script type="module" src="main.js"></script>
     <script>
+        // تسجيل ملف الخدمة بشكل مبدئي
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/firebase-messaging-sw.js').then(reg=>console.log('SW Registered')).catch(err=>console.log('SW Error:', err));
+                navigator.serviceWorker.register('/firebase-messaging-sw.js')
+                .then(reg => console.log('SW Registered'))
+                .catch(err => console.error('SW Failed', err));
             });
         }
     </script>

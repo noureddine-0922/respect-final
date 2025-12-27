@@ -2,6 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getFirestore, collection, getDocs, doc, getDoc, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js";
 
+// إعدادات فايربيس
 const firebaseConfig = {
     apiKey: "AIzaSyBjEc-wdY6s6v0AiVg4texFrohLwDcdaiU",
     authDomain: "respect-db-d1320.firebaseapp.com",
@@ -15,46 +16,73 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const messaging = getMessaging(app);
 
-// --- كود الاشتراك المحدث (الحل النهائي) ---
+// مفتاح VAPID الصحيح مع إزالة الفراغات
+const vapidKey = "BDixhVEmvt_z5kUNrT6OYShBYOdsRo-EOrg976iSjmDFgAYzmOuOFNFQFmWlVAYBefR3gKyQa8kQ-YcLwzYeYRw".trim();
+
+// ==========================================
+// 1. نظام الإشعارات (الحل النهائي)
+// ==========================================
 window.subscribeUser = async () => {
     try {
-        console.log("1. جاري طلب الإذن...");
+        console.log("1. طلب الإذن...");
         const permission = await Notification.requestPermission();
         
         if (permission === 'granted') {
-            console.log("2. الإذن مقبول، جاري تسجيل السيرفر...");
+            console.log("2. الإذن مقبول. تسجيل السيرفر وركر...");
             
-            // تسجيل السيرفر وركر وانتظار تفعيله
+            // تسجيل السيرفر وركر يدوياً لضمان العمل
             const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
             await navigator.serviceWorker.ready;
 
-            console.log("3. السيرفر جاهز، جاري طلب التوكن...");
-
-            // المفتاح الصحيح مدمج هنا بدقة (بدون مسافات)
+            console.log("3. السيرفر جاهز. جلب التوكن...");
             const token = await getToken(messaging, { 
-                vapidKey: "BDixhVEmvt_z5kUNrT6OYShBYOdsRo-EOrg976iSjmDFgAYzmOuOFNFQFmWlVAYBefR3gKyQa8kQ-YcLwzYeYRw",
+                vapidKey: vapidKey,
                 serviceWorkerRegistration: registration 
             });
 
             if (token) {
-                console.log("✅ تم استلام التوكن:", token);
+                console.log("Token:", token);
                 await addDoc(collection(db, "subscribers"), { token: token, date: new Date() });
-                alert("✅ تم تفعيل التنبيهات بنجاح! 🔔");
+                alert("✅ تم تفعيل التنبيهات بنجاح!");
                 document.getElementById('notifBtn').classList.add('subscribed');
+                document.getElementById('notifBtn').style.color = "#4CAF50";
             } else {
                 alert("❌ لم يتم استلام التوكن.");
             }
         } else {
-            alert("⚠️ يجب الضغط على 'سماح' للإشعارات.");
+            alert("⚠️ يجب السماح بالإشعارات من المتصفح.");
         }
     } catch (err) {
-        console.error("خطأ:", err);
-        // عرض رسالة واضحة في حال حدوث خطأ
-        alert("❌ خطأ تقني:\n" + err.message);
+        console.error("خطأ الاشتراك:", err);
+        alert("❌ حدث خطأ:\n" + err.message);
     }
-}
+};
 
-// --- باقي أكواد الموقع (لم يتم تغييرها) ---
+// ==========================================
+// 2. نظام تثبيت التطبيق (PWA Install)
+// ==========================================
+let deferredPrompt;
+const installBtn = document.getElementById('installBtn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBtn.style.display = 'inline-block'; // إظهار الزر
+});
+
+installBtn.addEventListener('click', async () => {
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`User response: ${outcome}`);
+        deferredPrompt = null;
+        installBtn.style.display = 'none';
+    }
+});
+
+// ==========================================
+// 3. نظام عرض الستريمرز (Logic)
+// ==========================================
 let allStreamers = [];
 let currentCategoryFilter = 'all';
 let currentStatusFilter = 'all';
@@ -70,7 +98,34 @@ const categoryNames = {
     'nwa': 'N.W.A', 'crypto': 'Crypto', 'yakuza': 'الياكوزا', 'oldschool': 'Old School'
 };
 
+async function checkMaintenance() {
+    try {
+        const docSnap = await getDoc(doc(db, "settings", "config"));
+        if (docSnap.exists() && docSnap.data().maintenance === true) {
+            document.body.innerHTML = `<div style="display:flex;justify-content:center;align-items:center;height:100vh;background:#0b0e11;color:white;"><h1>🚧 الموقع تحت الصيانة 🚧</h1></div>`;
+            return true;
+        }
+    } catch(e) {}
+    return false;
+}
+
+window.checkModal = () => {
+    const lastSeen = localStorage.getItem('lastSeenModal');
+    const now = new Date().getTime();
+    if (!lastSeen || now - lastSeen > 24 * 60 * 60 * 1000) {
+        const m = document.getElementById('welcomeModal'); if(m) m.classList.add('show');
+    }
+}
+window.closeModal = () => {
+    const m = document.getElementById('welcomeModal'); if(m) m.classList.remove('show');
+    localStorage.setItem('lastSeenModal', new Date().getTime());
+}
+
 async function fetchStreamers() {
+    const isMaint = await checkMaintenance();
+    if(isMaint) return;
+    window.checkModal();
+
     const container = document.getElementById('Streamer-grid');
     try {
         const querySnapshot = await getDocs(collection(db, "streamers"));
@@ -82,7 +137,7 @@ async function fetchStreamers() {
         if(totalEl) totalEl.innerText = allStreamers.length;
         if (allStreamers.length === 0) { container.innerHTML = '<div class="no-results">لا يوجد ستريمرز حالياً</div>'; return; }
         applyFilters();
-    } catch (error) { console.log(error); }
+    } catch (error) { container.innerHTML = '<div class="no-results">خطأ في الاتصال</div>'; }
 }
 
 function renderStreamers(list) {
@@ -93,7 +148,7 @@ function renderStreamers(list) {
     list.forEach(streamer => {
         const catDisplay = categoryNames[streamer.category] || streamer.category;
         const card = document.createElement('div');
-        card.className = 'card';
+        card.className = 'card'; card.id = `card-${streamer.username}`;
         card.innerHTML = `
             <div class="flip-wrapper">
                 <div class="card-inner">
@@ -148,9 +203,13 @@ function updateGlobalStats() {
 }
 
 window.filterData = (cat) => {
+    document.querySelectorAll('.sidebar .filter-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
     currentCategoryFilter = cat; applyFilters();
 }
 window.filterStatus = (status) => {
+    document.querySelectorAll('.status-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
     currentStatusFilter = status; applyFilters();
 }
 
@@ -161,7 +220,11 @@ function applyFilters() {
     else if (currentStatusFilter === 'offline') filteredList = filteredList.filter(s => !s.isLive);
     const searchVal = document.getElementById('searchInput').value.toLowerCase();
     if(searchVal) {
-        filteredList = filteredList.filter(s => s.name.toLowerCase().includes(searchVal) || s.icName.toLowerCase().includes(searchVal));
+        filteredList = filteredList.filter(s => 
+            s.name.toLowerCase().includes(searchVal) || 
+            s.icName.toLowerCase().includes(searchVal) ||
+            (categoryNames[s.category] && categoryNames[s.category].toLowerCase().includes(searchVal))
+        );
     }
     renderStreamers(filteredList);
 }
