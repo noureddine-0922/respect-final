@@ -3,117 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Respect Streams</title>
-    
-    <meta name="description" content="المكان الأول لمتابعة حالة ستريمرز ريسبكت (Respect) مباشرة. تابع البث المباشر، إحصائيات المشاهدات، وتصنيف العصابات والشرطة لحظة بلحظة.">
-    <meta name="keywords" content="Respect, ريسبكت, قراند, حياة واقعية, ستريمرز, بث مباشر, حالة السيرفر, Respect Streams, Kick">
-    <meta name="theme-color" content="#0b0e11">
-    
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+    <title>Respect Streams | ريسبكت ستريمرز</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* الستايل الأساسي عشان يطلع الشكل حلو */
+        body { background-color: #0b0e11; color: white; font-family: 'Cairo', sans-serif; margin: 0; padding: 20px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { color: #53fc18; text-shadow: 0 0 10px rgba(83, 252, 24, 0.5); font-size: 2.5rem; margin: 0; }
+        
+        /* الشبكة (Grid) */
+        #Streamer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* البطاقة */
+        .card {
+            background: #14171a;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid #333;
+            transition: transform 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .card:hover { transform: translateY(-5px); }
+        
+        .pfp { width: 80px; height: 80px; border-radius: 50%; border: 3px solid #333; object-fit: cover; margin-bottom: 10px; }
+        
+        .status { 
+            position: absolute; top: 10px; right: 10px; 
+            background: #333; padding: 5px 10px; border-radius: 5px; 
+            font-size: 0.8rem; font-weight: bold; 
+        }
+        
+        .info h3 { margin: 5px 0; color: white; }
+        .info p { color: #888; margin: 5px 0; font-size: 0.9rem; }
+        
+        .category-badge {
+            background: #23262a; color: #ccc; padding: 2px 8px; 
+            border-radius: 4px; font-size: 0.8rem; display: inline-block; margin: 5px 0;
+        }
+
+        .watch-btn {
+            display: block; width: 100%; padding: 10px 0; margin-top: 15px;
+            background: #23262a; color: white; text-decoration: none;
+            border-radius: 8px; font-weight: bold; transition: 0.3s;
+        }
+        .watch-btn:hover { background: #53fc18; color: black; }
+    </style>
 </head>
 <body>
-    
-    <div id="image-loader">
-        <div class="artist-credits">
-            🎨 رسم: <a href="https://x.com/BroojTK8" target="_blank">Broshka</a>
-        </div>
+
+    <div class="header">
+        <h1>RESPECT STREAMS 👑</h1>
+        <p>تابع حالة ستريمرز ريسبكت لحظة بلحظة</p>
     </div>
 
-    <div id="particles"></div>
-    <div class="overlay"></div>
-
-    <header>
-        <div class="logo-area">
-            <h1>RESPECT <span class="highlight">STREAMS</span></h1>
-            <p class="subtitle">المكان الأول لمتابعة حالة ستريمرز ريسبكت مباشرة</p>
-        </div>
-
-        <div class="stats-container">
-            <div class="stat-box">
-                <i class="fa-solid fa-users"></i>
-                <div>
-                    <span id="total-streamers">0</span>
-                    <small>ستريمر</small>
-                </div>
-            </div>
-            <div class="stat-box live-box">
-                <i class="fa-solid fa-broadcast-tower"></i>
-                <div>
-                    <span id="live-count">0</span>
-                    <small>لايف</small>
-                </div>
-            </div>
-            <div class="stat-box viewers-box">
-                <i class="fa-solid fa-eye"></i>
-                <div>
-                    <span id="total-viewers">0</span>
-                    <small>مشاهد الآن</small>
-                </div>
-            </div>
-        </div>
-        
-        <div class="progress-container">
-            <div id="progress-bar"></div>
-        </div>
-    </header>
-
-    <div class="controls-area">
-        
-        <div class="status-filters">
-            <button class="filter-btn active" onclick="filterStatus('all', this)">الكل</button>
-            <button class="filter-btn" onclick="filterStatus('live', this)">لايف حالياً 🔥</button>
-            <button class="filter-btn" onclick="filterStatus('offline', this)">غير متصل</button>
-        </div>
-
-        <div class="category-dropdown">
-            <button class="dropdown-btn" onclick="toggleDropdown()">
-                <span>تصنيف الفئات</span>
-                <i class="fa-solid fa-chevron-down"></i>
-            </button>
-            <div class="dropdown-content" id="catDropdown">
-                <a href="#" onclick="filterCategory('all')">عرض الكل</a>
-                <a href="#" onclick="filterCategory('police')">الشرطة</a>
-                <a href="#" onclick="filterCategory('S.OPS')">قوات خاصة</a>
-                <a href="#" onclick="filterCategory('gangs')">عصابات</a>
-                <a href="#" onclick="filterCategory('عائلة عبيد')">عائلة عبيد</a>
-                <a href="#" onclick="filterCategory('عصابة البلس')">عصابة البلس</a>
-                <a href="#" onclick="filterCategory('N.W.A')">N.W.A</a>
-                <a href="#" onclick="filterCategory('Middle Gang')">Middle Gang</a>
-                <a href="#" onclick="filterCategory('عصابة الشرق')">عصابة الشرق</a>
-                <a href="#" onclick="filterCategory('citizen')">مواطنين</a>
-            </div>
-        </div>
+    <div id="Streamer-grid">
+        جاري الاتصال بالسيرفر... 📡
     </div>
-
-    <div class="search-wrapper">
-        <i class="fa-solid fa-search"></i>
-        <input type="text" id="searchInput" placeholder="ابحث عن اسم الستريمر..." onkeyup="searchStreamers()">
-    </div>
-
-    <div class="grid" id="streamer-grid"></div>
-
-    <footer>
-        <div class="footer-line"></div>
-        <p>جميع الحقوق محفوظة لـ Respect Streams - 2026©</p>
-        <a href="https://x.com/nxr_rt" target="_blank" class="twitter-link">
-            <i class="fa-brands fa-x-twitter"></i> تابعنا على تويتر
-        </a>
-    </footer>
 
     <script type="module" src="main.js"></script>
 
-    <script>
-        document.addEventListener('contextmenu', event => event.preventDefault());
-        document.onkeydown = function(e) {
-            if(e.keyCode == 123) return false;
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) return false;
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) return false;
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) return false;
-            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
-        }
-    </script>
 </body>
 </html>
 

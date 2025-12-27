@@ -2,7 +2,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// 🔴🔴 ألصق كود الـ Firebase Config حقك هنا (نفس اللي في الأدمن) 🔴🔴
+// ✅ إعدادات Firebase الخاصة بك (مصححة)
 const firebaseConfig = {
     apiKey: "AIzaSyBjEc-wdY6s6v0AiVg4texFrohLwDcdaiU",
     authDomain: "respect-db-d1320.firebaseapp.com",
@@ -11,18 +11,22 @@ const firebaseConfig = {
     messagingSenderId: "823436634480",
     appId: "1:823436634480:web:3380974cce87d8e82b07b5"
 };
-// 🔴🔴 نهاية منطقة اللصق 🔴🔴
 
 // تهيئة Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// دالة لجلب الستريمرز من قاعدة البيانات
+// دالة لجلب الستريمرز
 async function fetchStreamers() {
-    const container = document.getElementById('Streamer-grid'); // تأكد أن هذا هو اسم الـ ID في ملف html
+    // 🔴 هنا كان سبب المشكلة: عدلنا الاسم ليطابق ملفك HTML
+    const container = document.getElementById('Streamer-grid'); 
     
-    // إظهار علامة تحميل
-    container.innerHTML = '<div style="color:white; text-align:center;">جاري جلب الستريمرز من السيرفر... 📡</div>';
+    if (!container) {
+        console.error("لم يتم العثور على العنصر Streamer-grid في ملف HTML");
+        return;
+    }
+
+    container.innerHTML = '<div style="color:white; text-align:center; width:100%;">جاري تحميل الستريمرز... 📡</div>';
 
     try {
         const querySnapshot = await getDocs(collection(db, "streamers"));
@@ -33,34 +37,28 @@ async function fetchStreamers() {
         });
 
         if (streamers.length === 0) {
-            container.innerHTML = '<div style="color:white; text-align:center;">لا يوجد ستريمرز حالياً 🤷‍♂️</div>';
+            container.innerHTML = '<div style="color:white; text-align:center; width:100%;">لا يوجد ستريمرز حالياً 🤷‍♂️</div>';
             return;
         }
 
-        // بدء فحص الحالة
-        checkStatus(streamers);
+        // بدء الرسم
+        renderStreamers(streamers);
 
     } catch (error) {
         console.error("Error getting documents: ", error);
-        container.innerHTML = '<div style="color:red; text-align:center;">حدث خطأ في الاتصال بقاعدة البيانات!</div>';
+        container.innerHTML = '<div style="color:red; text-align:center;">تأكد من إعدادات قواعد البيانات (Rules) في Firebase</div>';
     }
 }
 
-// الدالة الرئيسية لفحص حالة البث (نفس المنطق القديم مع تعديلات بسيطة)
-async function checkStatus(streamersList) {
-    const container = document.getElementById('cards-container');
-    container.innerHTML = ''; // تنظيف الحاوية لبدء الرسم
+// دالة رسم البطاقات
+function renderStreamers(streamersList) {
+    const container = document.getElementById('Streamer-grid');
+    container.innerHTML = ''; 
 
-    // ترتيب القائمة (الأولوية لليوزر اللي عنده لايكات أو ترتيب معين - اختياري)
-    // حالياً بنعرضهم زي ما هم
-
-    for (const streamer of streamersList) {
-        // إنشاء بطاقة الستريمر (HTML)
+    streamersList.forEach(streamer => {
         const card = document.createElement('div');
-        card.className = 'card'; // تأكد أن كلاس CSS اسمه card
-        card.id = `card-${streamer.username}`;
-        
-        // القالب المبدئي (Offline)
+        card.className = 'card'; 
+        // تصميم البطاقة
         card.innerHTML = `
             <div class="status offline">OFFLINE</div>
             <img src="${streamer.image}" alt="${streamer.name}" class="pfp">
@@ -73,41 +71,36 @@ async function checkStatus(streamersList) {
         `;
         
         container.appendChild(card);
-
-        // فحص البث الحقيقي (API)
         checkLiveStatus(streamer.username, card);
-    }
+    });
 }
 
-// دالة فحص الـ API (كل 30 ثانية تتحدث)
+// فحص حالة البث (API)
 async function checkLiveStatus(username, cardElement) {
     try {
-        // استخدام بروكسي لتجاوز مشاكل CORS (يمكنك تغييره إذا عندك بروكسي خاص)
         const response = await fetch(`https://kick.com/api/v1/channels/${username}`);
         const data = await response.json();
 
         if (data && data.livestream) {
-            // الستريمر أونلاين 🔥
             const statusDiv = cardElement.querySelector('.status');
             statusDiv.className = 'status online';
             statusDiv.innerText = 'LIVE 🔥';
+            statusDiv.style.background = "#53fc18";
+            statusDiv.style.color = "black";
             
-            cardElement.classList.add('is-live'); // كلاس إضافي للتأثيرات
-            
-            // تحديث الزر للمشاهدة المباشرة
+            cardElement.style.borderColor = "#53fc18";
+            cardElement.style.boxShadow = "0 0 15px rgba(83, 252, 24, 0.3)";
+
             const btn = cardElement.querySelector('.watch-btn');
-            btn.innerText = "تابع البث الآن 🔴";
+            btn.innerText = "تابع البث 🔴";
             btn.style.background = "#53fc18";
             btn.style.color = "black";
         }
     } catch (e) {
-        console.log(`Error checking ${username}:`, e);
+        console.log(`Error checking ${username}`);
     }
 }
 
-// تشغيل الكود عند فتح الصفحة
+// تشغيل عند البدء
 fetchStreamers();
-
-// تحديث تلقائي كل دقيقة
-setInterval(fetchStreamers, 60000);
 
