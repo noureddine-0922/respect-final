@@ -1,7 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// إعدادات فايربيس (كما هي)
 const firebaseConfig = {
     apiKey: "AIzaSyBjEc-wdY6s6v0AiVg4texFrohLwDcdaiU",
     authDomain: "respect-db-d1320.firebaseapp.com",
@@ -15,7 +14,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // ==========================================
-// منطق الموقع الأساسي (عرض الستريمرز)
+// منطق الموقع الأساسي
 // ==========================================
 
 let allStreamers = [];
@@ -33,14 +32,40 @@ const categoryNames = {
     'nwa': 'N.W.A', 'crypto': 'Crypto', 'yakuza': 'الياكوزا', 'oldschool': 'Old School'
 };
 
+// رابط الشعار الجديد لاستخدامه في صفحة الصيانة
+const maintenanceLogo = "https://cdn.discordapp.com/attachments/1436149485167185940/1454355201539702905/logo.png?ex=6950c954&is=694f77d4&hm=6f5fd0f1197cc84ffc9d2e18f97efba791ef75b01f7da85a79702ae22778b0b8&";
+
+// دالة التحقق من الصيانة (تم تطويرها)
 async function checkMaintenance() {
     try {
         const docSnap = await getDoc(doc(db, "settings", "config"));
         if (docSnap.exists() && docSnap.data().maintenance === true) {
-            document.body.innerHTML = `<div style="display:flex;justify-content:center;align-items:center;height:100vh;background:#0b0e11;color:white;"><h1>🚧 الموقع تحت الصيانة 🚧</h1></div>`;
+            // تصميم صفحة الصيانة الجديدة
+            document.body.innerHTML = `
+                <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; background:#0b0e11; color:white; text-align:center; padding:20px;">
+                    <img src="${maintenanceLogo}" alt="Logo" style="width:120px; margin-bottom:30px; border-radius:50%; box-shadow: 0 0 25px rgba(0, 255, 136, 0.2);">
+                    <i class="fa-solid fa-triangle-exclamation" style="font-size:4rem; color:#ffcc00; margin-bottom:20px;"></i>
+                    <h1 style="font-size:2.5rem; margin-bottom:15px; font-family:'Cairo', sans-serif;">الموقع تحت الصيانة</h1>
+                    <p style="font-size:1.2rem; color:#ccc; margin-bottom:30px; max-width:500px; line-height:1.6; font-family:'Cairo', sans-serif;">
+                        نعمل حالياً على تحسين وتطوير السيرفر لتقديم تجربة أفضل.
+                        <br>يرجى متابعة صفحتنا لمعرفة موعد الافتتاح.
+                    </p>
+                    <a href="https://x.com/streamsrespect" target="_blank" style="text-decoration:none; background: linear-gradient(45deg, #1da1f2, #0d8bd9); color:white; padding:15px 35px; border-radius:30px; font-size:1.1rem; font-weight:bold; display:inline-flex; align-items:center; gap:10px; transition: transform 0.2s ease; box-shadow: 0 5px 15px rgba(29, 161, 242, 0.3); font-family:'Cairo', sans-serif;">
+                        <i class="fa-brands fa-x-twitter" style="font-size:1.5rem;"></i> تابعنا على تويتر
+                    </a>
+                </div>
+            `;
+            // إضافة تأثير حركي بسيط للزر عند التحويم
+            const btn = document.querySelector('a[href*="x.com"]');
+            if(btn){
+                btn.onmouseover = () => btn.style.transform = 'translateY(-3px)';
+                btn.onmouseout = () => btn.style.transform = 'translateY(0)';
+            }
             return true;
         }
-    } catch(e) {}
+    } catch(e) {
+        console.error("Error checking maintenance:", e);
+    }
     return false;
 }
 
@@ -58,7 +83,7 @@ window.closeModal = () => {
 
 async function fetchStreamers() {
     const isMaint = await checkMaintenance();
-    if(isMaint) return;
+    if(isMaint) return; // إذا كان تحت الصيانة، توقف هنا
     window.checkModal();
 
     const container = document.getElementById('Streamer-grid');
