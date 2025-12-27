@@ -66,18 +66,16 @@ body::before {
 .stat-label { font-size: 0.9rem; color: #888; }
 
 .top-controls { margin-bottom: 25px; background: var(--card-bg); padding: 20px; border-radius: 16px; border: 1px solid #333; }
-
-/* ✅ إصلاح مكان أيقونة البحث */
 .search-box { position: relative; margin-bottom: 20px; }
 .search-box input {
-    width: 100%; padding: 15px 50px 15px 20px; /* مسافة لليمين عشان الأيقونة */
+    width: 100%; padding: 15px 50px 15px 20px;
     border-radius: 50px; background: #0b0e11; border: 2px solid #333;
     color: white; font-family: 'Cairo'; outline: none; transition: 0.3s;
 }
 .search-box input:focus { border-color: var(--neon-purple); box-shadow: 0 0 15px rgba(138, 43, 226, 0.3); }
 .search-box i {
-    position: absolute; right: 20px; /* النقل لليمين */
-    top: 50%; transform: translateY(-50%); color: #777; left: auto;
+    position: absolute; right: 20px; left: auto;
+    top: 50%; transform: translateY(-50%); color: #777;
 }
 
 .status-filters { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
@@ -86,14 +84,23 @@ body::before {
 .status-btn.active.live { background: var(--neon-green); color: black; box-shadow: 0 0 10px var(--neon-green); }
 .status-btn.active.offline { background: var(--offline-red); color: white; }
 
-/* --- تصميم البطاقات الجديد (Flip Card) --- */
+/* --- تصميم البطاقات الجديد (زر ثابت + دوران علوي) --- */
 #Streamer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
 
 .card {
     background-color: transparent;
-    perspective: 1000px; /* عشان تأثير 3D */
-    height: 320px; /* ارتفاع ثابت ضروري للقلب */
+    height: 340px; /* زيادة الارتفاع قليلاً للزر */
     border: none;
+    display: flex;
+    flex-direction: column; /* ترتيب العناصر عمودياً */
+    gap: 10px;
+}
+
+/* حاوية الجزء المتحرك (الصورة والاسم) */
+.flip-wrapper {
+    flex: 1; /* يأخذ المساحة المتبقية */
+    position: relative;
+    perspective: 1000px;
 }
 
 .card-inner {
@@ -104,24 +111,23 @@ body::before {
     transition: transform 0.6s;
     transform-style: preserve-3d;
     border-radius: 16px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
 }
 
-/* حركة القلب عند الهوفر */
-.card:hover .card-inner { transform: rotateY(180deg); }
+/* الدوران يحدث فقط عند تمرير الماوس على الجزء العلوي */
+.flip-wrapper:hover .card-inner { transform: rotateY(180deg); }
 
 .card-front, .card-back {
     position: absolute; width: 100%; height: 100%;
-    -webkit-backface-visibility: hidden; backface-visibility: hidden; /* إخفاء الظهر */
+    -webkit-backface-visibility: hidden; backface-visibility: hidden;
     border-radius: 16px; padding: 20px;
     background: var(--card-bg); border: 2px solid #2a2e35;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
 }
 
-/* الوجه الأمامي */
 .card-front { z-index: 2; }
 .card-front.is-live { border-color: var(--neon-green); box-shadow: 0 0 15px rgba(83, 252, 24, 0.2); }
 
-/* الوجه الخلفي (المنقلب) */
 .card-back {
     transform: rotateY(180deg);
     background: #0f1114;
@@ -145,25 +151,23 @@ body::before {
 .info h3 { margin: 10px 0 5px 0; font-size: 1.3rem; }
 .info p { color: #888; margin: 0; font-size: 0.9rem; }
 
-/* محتويات الوجه الخلفي */
-.back-category {
-    font-size: 1.2rem; color: var(--neon-purple); margin-bottom: 15px; font-weight: bold;
-}
-.back-viewers {
-    font-size: 1.5rem; color: white; margin-bottom: 20px;
-}
+.back-category { font-size: 1.2rem; color: var(--neon-purple); margin-bottom: 15px; font-weight: bold; }
+.back-viewers { font-size: 1.5rem; color: white; margin-bottom: 20px; }
 .back-viewers i { color: var(--neon-green); margin-left: 5px; }
 
+/* زر المشاهدة (ثابت في الأسفل) */
 .watch-btn {
-    display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 12px;
     background: #23262a; color: white; text-decoration: none; border-radius: 10px;
     transition: 0.3s; font-weight: bold; border: 1px solid #333;
+    z-index: 5; /* لضمان أنه فوق كل شيء */
 }
 .watch-btn:hover { background: white; color: black; }
 .is-live-btn { background: var(--neon-green); color: black; border-color: var(--neon-green); }
 .is-live-btn:hover { background: #42c713; }
 
-/* النافذة المنبثقة والفوتر */
+/* المودال والفوتر */
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.5s; }
 .modal-overlay.show { opacity: 1; pointer-events: all; }
 .modal-content { background: #14171a; border: 2px solid var(--neon-purple); border-radius: 20px; padding: 30px; text-align: center; max-width: 400px; width: 90%; position: relative; box-shadow: 0 0 30px rgba(138, 43, 226, 0.3); transform: scale(0.8); transition: 0.5s; }

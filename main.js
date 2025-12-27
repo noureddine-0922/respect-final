@@ -16,7 +16,6 @@ const db = getFirestore(app);
 let allStreamers = [];
 let currentCategoryFilter = 'all';
 let currentStatusFilter = 'all';
-let totalViewersGlobal = 0; // متغير لحساب إجمالي المشاهدين
 
 const categoryNames = {
     'police': '<i class="fa-solid fa-handcuffs"></i> الشرطة',
@@ -29,7 +28,7 @@ const categoryNames = {
     'nwa': 'N.W.A', 'crypto': 'Crypto', 'yakuza': 'الياكوزا', 'oldschool': 'Old School'
 };
 
-// --- المودال الترحيبي ---
+// مودال الترحيب
 window.checkModal = () => {
     const lastSeen = localStorage.getItem('lastSeenModal');
     const now = new Date().getTime();
@@ -72,28 +71,31 @@ function renderStreamers(list) {
         card.className = 'card'; 
         card.id = `card-${streamer.username}`;
         
-        // بناء هيكل البطاقة المنقلبة (Front & Back)
+        // الهيكل الجديد: جزء علوي ينقلب + زر سفلي ثابت
         card.innerHTML = `
-            <div class="card-inner">
-                <div class="card-front">
-                    <div class="status-badge offline"><i class="fa-solid fa-power-off"></i> غير متصل</div>
-                    <img src="${streamer.image}" alt="${streamer.name}" class="pfp">
-                    <div class="info">
-                        <h3>${streamer.name}</h3>
-                        <p>${streamer.icName}</p>
+            <div class="flip-wrapper">
+                <div class="card-inner">
+                    <div class="card-front">
+                        <div class="status-badge offline"><i class="fa-solid fa-power-off"></i> غير متصل</div>
+                        <img src="${streamer.image}" alt="${streamer.name}" class="pfp">
+                        <div class="info">
+                            <h3>${streamer.name}</h3>
+                            <p>${streamer.icName}</p>
+                        </div>
                     </div>
-                </div>
 
-                <div class="card-back">
-                    <div class="back-category">${catDisplay}</div>
-                    <div class="back-viewers">
-                        <span class="viewer-count">0</span> <i class="fa-solid fa-eye"></i>
+                    <div class="card-back">
+                        <div class="back-category">${catDisplay}</div>
+                        <div class="back-viewers">
+                            <span class="viewer-count">0</span> <i class="fa-solid fa-eye"></i>
+                        </div>
                     </div>
-                    <a href="https://kick.com/${streamer.username}" target="_blank" class="watch-btn">
-                        <i class="fa-brands fa-kickstarter"></i> صفحة القناة
-                    </a>
                 </div>
             </div>
+
+            <a href="https://kick.com/${streamer.username}" target="_blank" class="watch-btn">
+                <i class="fa-brands fa-kickstarter"></i> صفحة القناة
+            </a>
         `;
         container.appendChild(card);
         checkLiveStatus(streamer.username, card);
@@ -107,7 +109,7 @@ async function checkLiveStatus(username, cardElement) {
         const index = allStreamers.findIndex(s => s.username === username);
 
         if (data && data.livestream) {
-            // تحديث بيانات الستريمر
+            // تحديث البيانات
             if(index > -1) {
                 allStreamers[index].isLive = true;
                 allStreamers[index].viewers = data.livestream.viewer_count;
@@ -115,16 +117,18 @@ async function checkLiveStatus(username, cardElement) {
 
             const cardFront = cardElement.querySelector('.card-front');
             const cardBack = cardElement.querySelector('.card-back');
-            
+            const btn = cardElement.querySelector('.watch-btn');
+
             // تحديث الوجه الأمامي
             cardFront.classList.add('is-live');
             const badge = cardFront.querySelector('.status-badge');
             badge.className = 'status-badge online';
             badge.innerHTML = '<i class="fa-solid fa-fire fire-anim"></i> بث مباشر';
 
-            // تحديث الوجه الخلفي
+            // تحديث الوجه الخلفي (للمعلومات)
             cardBack.querySelector('.viewer-count').innerText = data.livestream.viewer_count;
-            const btn = cardBack.querySelector('.watch-btn');
+
+            // تحديث الزر الثابت
             btn.innerHTML = 'تابع البث الآن 🔴';
             btn.classList.add('is-live-btn');
 
@@ -136,16 +140,13 @@ async function checkLiveStatus(username, cardElement) {
                  allStreamers[index].viewers = 0;
              }
         }
-        updateGlobalStats(); // تحديث العدادات العامة
+        updateGlobalStats(); 
     } catch (e) { console.log(e); }
 }
 
-// دالة لحساب وتحديث الإحصائيات العامة (عداد المشاهدين والبثوث)
 function updateGlobalStats() {
     const liveCount = allStreamers.filter(s => s.isLive).length;
     document.getElementById('liveNow').innerText = liveCount;
-
-    // جمع كل المشاهدين
     const totalViewers = allStreamers.reduce((sum, s) => sum + (s.viewers || 0), 0);
     document.getElementById('totalViewersCount').innerText = totalViewers > 0 ? totalViewers : '0';
 }
