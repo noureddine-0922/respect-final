@@ -4,60 +4,98 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة التحكم - Respect Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { background-color: #0b0e11; color: white; font-family: 'Cairo', sans-serif; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; }
-        input, select, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; font-family: 'Cairo'; }
+        body { background-color: #0b0e11; color: white; font-family: 'Cairo', sans-serif; padding: 20px; margin: 0; }
+        
+        /* تنسيق شاشة الدخول */
+        #loginScreen {
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            height: 100vh; position: fixed; top: 0; left: 0; width: 100%;
+            background: #0b0e11; z-index: 1000;
+        }
+        .login-box {
+            background: #14171a; padding: 40px; border-radius: 16px; border: 1px solid #333;
+            text-align: center; width: 90%; max-width: 400px;
+            box-shadow: 0 0 50px rgba(83, 252, 24, 0.1);
+        }
+        .login-box h2 { margin-top: 0; color: #53fc18; }
+        
+        /* تنسيق لوحة التحكم */
+        #dashboard { display: none; max-width: 600px; margin: 0 auto; }
+        
+        input, select, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; font-family: 'Cairo'; box-sizing: border-box; }
         input, select { background: #1a1d21; color: white; border: 1px solid #333; outline: none; }
+        input:focus { border-color: #53fc18; }
+        
         button { background: #53fc18; color: black; font-weight: bold; cursor: pointer; transition: 0.3s; }
         button:hover { background: #42c713; }
-        .streamer-item { background: #14171a; padding: 15px; margin-bottom: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333; }
+        
+        .logout-btn { background: #ff3333; color: white; margin-bottom: 20px; }
+        .logout-btn:hover { background: #cc0000; }
+
+        .streamer-item { background: #1a1d21; padding: 15px; margin-bottom: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333; }
         .delete-btn { background: #ff3333; color: white; width: auto; padding: 5px 15px; }
-        h2 { border-bottom: 2px solid #53fc18; padding-bottom: 10px; color: #53fc18; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>👑 إضافة ستريمر جديد</h2>
-    <input type="text" id="sName" placeholder="الاسم الظاهر (مثال: S5B)">
-    <input type="text" id="sUsername" placeholder="يوزر كيك (مثال: s5b)">
-    <input type="text" id="sIcName" placeholder="اسم الشخصية (مثال: ماثيو)">
-    <input type="text" id="sImage" placeholder="رابط الصورة الشخصية">
-    
-    <select id="sCategory">
-        <optgroup label="جهات حكومية">
-            <option value="police">الشرطة </option>
-            <option value="ems">الإسعاف </option>
-            <option value="justice">العدل </option>
-            <option value="s.ops">قوات خاصة </option>
-        </optgroup>
-        <optgroup label="مدنيين">
-            <option value="citizen">مواطن </option>
-        </optgroup>
-        <optgroup label="عصابات وعائلات">
-            <option value="plus">عصابة البلس </option>
-            <option value="brazil">البرازيليين </option>
-            <option value="east">عصابة الشرق </option>
-            <option value="west">عصابة الغرب </option>
-            <option value="middle">Middle Gang </option>
-            <option value="nwa">N.W.A 🎤</option>
-            <option value="crypto">Crypto </option>
-            <option value="yakuza">عائلة الياكوزا </option>
-            <option value="oldschool">Old School </option>
-            <option value="obeid">عائلة عبيد </option>
-        </optgroup>
-    </select>
-    
-    <button onclick="addStreamer()">➕ إضافة للقائمة</button>
+    <div id="loginScreen">
+        <div class="login-box">
+            <h2>🔐 دخول الأدمن</h2>
+            <input type="email" id="emailInput" placeholder="البريد الإلكتروني">
+            <input type="password" id="passInput" placeholder="كلمة المرور">
+            <button onclick="login()">دخول</button>
+            <p id="loginError" style="color:red; display:none;">خطأ في المعلومات!</p>
+        </div>
+    </div>
 
-    <h2>📋 القائمة الحالية</h2>
-    <div id="listArea">جاري التحميل...</div>
-</div>
+    <div id="dashboard">
+        <button class="logout-btn" onclick="logout()">🚪 تسجيل خروج</button>
+        
+        <div class="container">
+            <h2>👑 إضافة ستريمر جديد</h2>
+            <input type="text" id="sName" placeholder="الاسم الظاهر (مثال: S5B)">
+            <input type="text" id="sUsername" placeholder="يوزر كيك (مثال: s5b)">
+            <input type="text" id="sIcName" placeholder="اسم الشخصية (مثال: ماثيو)">
+            <input type="text" id="sImage" placeholder="رابط الصورة الشخصية">
+            
+            <select id="sCategory">
+                <optgroup label="جهات حكومية">
+                    <option value="police">👮‍♂️ الشرطة</option>
+                    <option value="ems">🚑 الإسعاف</option>
+                    <option value="justice">⚖️ العدل</option>
+                    <option value="s.ops">🦅 قوات خاصة</option>
+                </optgroup>
+                <optgroup label="مدنيين">
+                    <option value="citizen">🧍 مواطن</option>
+                </optgroup>
+                <optgroup label="عصابات وعائلات">
+                    <option value="plus">➕ عصابة البلس</option>
+                    <option value="brazil">🇧🇷 البرازيليين</option>
+                    <option value="east">🌏 عصابة الشرق</option>
+                    <option value="west">🤠 عصابة الغرب</option>
+                    <option value="middle">🖕 Middle Gang</option>
+                    <option value="nwa">🎤 N.W.A</option>
+                    <option value="crypto">💰 Crypto</option>
+                    <option value="yakuza">🐉 عائلة الياكوزا</option>
+                    <option value="oldschool">📻 Old School</option>
+                    <option value="obeid">👑 عائلة عبيد</option>
+                </optgroup>
+            </select>
+            
+            <button onclick="addStreamer()">➕ إضافة للقائمة</button>
+
+            <h2 style="margin-top: 30px;">📋 القائمة الحالية</h2>
+            <div id="listArea">جاري التحميل...</div>
+        </div>
+    </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    // استدعاء مكتبة التوثيق (Auth)
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     // 🔴🔴 ألصق كود الـ Firebase Config حقك هنا 🔴🔴
     const firebaseConfig = {
@@ -71,9 +109,54 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const auth = getAuth(app);
     const dbCollection = collection(db, "streamers");
 
-    // قاموس للترجمة في صفحة الأدمن عشان تعرف مين يتبع مين
+    // --- نظام الحماية والتوثيق ---
+    
+    // مراقبة حالة الدخول (تشتغل تلقائي أول ما تفتح الصفحة)
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            // إذا كان مسجل دخول -> اخفِ شاشة الدخول واظهر اللوحة
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            loadStreamers(); // حمل البيانات فقط إذا سجل دخول
+        } else {
+            // إذا غير مسجل -> اظهر شاشة الدخول واخفِ اللوحة
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('dashboard').style.display = 'none';
+        }
+    });
+
+    // دالة تسجيل الدخول
+    window.login = () => {
+        const email = document.getElementById('emailInput').value;
+        const pass = document.getElementById('passInput').value;
+        const errorMsg = document.getElementById('loginError');
+
+        signInWithEmailAndPassword(auth, email, pass)
+            .then(() => {
+                errorMsg.style.display = 'none';
+                // onAuthStateChanged راح تتصرف وتفتح الصفحة
+            })
+            .catch((error) => {
+                console.error(error);
+                errorMsg.style.display = 'block';
+                errorMsg.innerText = "خطأ: تأكد من الإيميل أو الباسورد";
+            });
+    }
+
+    // دالة تسجيل الخروج
+    window.logout = () => {
+        if(confirm("هل تريد تسجيل الخروج؟")) {
+            signOut(auth).then(() => {
+                location.reload();
+            });
+        }
+    }
+
+    // --- دوال الأدمن (نفس القديمة) ---
+
     const catMap = {
         'police': 'الشرطة', 'ems': 'الإسعاف', 'justice': 'العدل', 's.ops': 'قوات خاصة',
         'citizen': 'مواطن', 'plus': 'البلس', 'brazil': 'البرازيليين', 'east': 'الشرق',
@@ -93,40 +176,47 @@
         try {
             await addDoc(dbCollection, { name, username, icName, image, category });
             alert("تمت الإضافة! ✅");
-            location.reload();
-        } catch (e) {
-            alert("خطأ: " + e.message);
-        }
+            // تفريغ الحقول
+            document.getElementById('sName').value = '';
+            document.getElementById('sUsername').value = '';
+            document.getElementById('sIcName').value = '';
+            document.getElementById('sImage').value = '';
+            loadStreamers();
+        } catch (e) { alert("خطأ: " + e.message); }
     }
 
     async function loadStreamers() {
-        const querySnapshot = await getDocs(dbCollection);
         const listArea = document.getElementById('listArea');
-        listArea.innerHTML = "";
-        
-        querySnapshot.forEach((docSnap) => {
-            const data = docSnap.data();
-            // استخدام القاموس لعرض الاسم بالعربي
-            const catName = catMap[data.category] || data.category;
-            listArea.innerHTML += `
-                <div class="streamer-item">
-                    <div>
-                        <strong>${data.name}</strong> (${data.username})<br>
-                        <small style="color:#888">${catName}</small>
+        listArea.innerHTML = "جاري التحميل...";
+        try {
+            const querySnapshot = await getDocs(dbCollection);
+            listArea.innerHTML = "";
+            if (querySnapshot.empty) { listArea.innerHTML = "لا يوجد بيانات"; return; }
+            querySnapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                const catName = catMap[data.category] || data.category;
+                listArea.innerHTML += `
+                    <div class="streamer-item">
+                        <div>
+                            <strong>${data.name}</strong> (${data.username})<br>
+                            <small style="color:#888">${data.icName} - ${catName}</small>
+                        </div>
+                        <button class="delete-btn" onclick="deleteStreamer('${docSnap.id}')">حذف 🗑️</button>
                     </div>
-                    <button class="delete-btn" onclick="deleteStreamer('${docSnap.id}')">حذف 🗑️</button>
-                </div>
-            `;
-        });
+                `;
+            });
+        } catch(e) {
+            console.error(e);
+            listArea.innerHTML = "حدث خطأ في جلب البيانات (تأكد أنك مسجل دخول)";
+        }
     }
 
     window.deleteStreamer = async (id) => {
         if(confirm("متاكد تبي تحذف؟")) {
             await deleteDoc(doc(db, "streamers", id));
-            location.reload();
+            loadStreamers();
         }
     }
-    loadStreamers();
 </script>
 </body>
 </html>
