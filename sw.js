@@ -12,19 +12,20 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// استقبال الإشعارات في الخلفية
+// معالج الرسائل في الخلفية
 messaging.onBackgroundMessage((payload) => {
+  console.log('رسالة خلفية:', payload);
   const notificationTitle = payload.notification.title;
   const notificationOptions = {
     body: payload.notification.body,
-    icon: payload.notification.icon || '/logo.png'
+    icon: 'https://cdn.discordapp.com/attachments/1436149485167185940/1454355201539702905/logo.png'
   };
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-// PWA Caching
-const CACHE_NAME = 'respect-streams-v4'; // تحديث الإصدار
-const ASSETS = ['/', '/style.css', '/main.js', '/manifest.json'];
+// الكاش الجديد (v5)
+const CACHE_NAME = 'respect-streams-v5';
+const ASSETS = ['/', '/index.html', '/style.css', '/main.js', '/manifest.json'];
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();

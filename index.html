@@ -24,7 +24,7 @@
             <i class="fa-solid fa-xmark modal-close" onclick="closeModal()"></i>
             <img src="https://cdn.discordapp.com/attachments/1436149485167185940/1454355201539702905/logo.png?ex=6950c954&is=694f77d4&hm=6f5fd0f1197cc84ffc9d2e18f97efba791ef75b01f7da85a79702ae22778b0b8&" alt="Logo" class="modal-logo">
             <h2 style="color:white; margin:0 0 10px 0;">أهلاً بك في ريسبكت!</h2>
-            <p style="color:#ccc;">فعل الإشعارات ليوصلك تنبيه إذا فتح الستريمر المفضل عندك بث!</p>
+            <p style="color:#ccc;">اشترك في الإشعارات ليصلك تنبيه عند بدء البث!</p>
             <a href="https://x.com/streamsrespect" target="_blank" class="modal-btn"><i class="fa-brands fa-x-twitter"></i> تواصل معنا</a>
         </div>
     </div>
@@ -33,7 +33,6 @@
         <div id="notifBtn" class="notif-icon" onclick="subscribeUser()">
             <i class="fa-regular fa-bell"></i>
         </div>
-
         <img src="https://cdn.discordapp.com/attachments/1436149485167185940/1454355201539702905/logo.png?ex=6950c954&is=694f77d4&hm=6f5fd0f1197cc84ffc9d2e18f97efba791ef75b01f7da85a79702ae22778b0b8&" alt="Logo" class="logo-img">
         <h1 class="brand-title">RESPECT STREAMS</h1>
         <p class="brand-subtitle">تابع حالة ستريمرز ريسبكت لحظة بلحظة</p>
@@ -72,63 +71,32 @@
 
         <section class="content-area">
             <div class="stats-bar">
-                <div class="stat-item">
-                    <span class="stat-number" id="totalStreamers">-</span>
-                    <span class="stat-label">الستريمرز</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-number" id="liveNow" style="color: var(--neon-green)">0</span>
-                    <span class="stat-label">بث مباشر</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-number" id="totalViewersCount" style="color: var(--neon-purple)">0</span>
-                    <span class="stat-label">مشاهد الآن</span>
-                </div>
+                <div class="stat-item"><span class="stat-number" id="totalStreamers">-</span><span class="stat-label">الستريمرز</span></div>
+                <div class="stat-item"><span class="stat-number" id="liveNow" style="color: var(--neon-green)">0</span><span class="stat-label">بث مباشر</span></div>
+                <div class="stat-item"><span class="stat-number" id="totalViewersCount" style="color: var(--neon-purple)">0</span><span class="stat-label">مشاهد الآن</span></div>
             </div>
-
             <div class="top-controls">
-                <div class="search-box">
-                    <input type="text" id="searchInput" placeholder="ابحث عن ستريمر.المفضل...">
-                    <i class="fa-solid fa-search"></i>
-                </div>
+                <div class="search-box"><input type="text" id="searchInput" placeholder="ابحث..."><i class="fa-solid fa-search"></i></div>
                 <div class="status-filters">
                     <button class="status-btn active all" onclick="filterStatus('all')">الكل</button>
                     <button class="status-btn live" onclick="filterStatus('live')">🔴 بث مباشر</button>
                     <button class="status-btn offline" onclick="filterStatus('offline')">غير متصل</button>
                 </div>
             </div>
-
-            <div id="Streamer-grid">
-                <div class="loading"><i class="fa-solid fa-satellite-dish fa-spin"></i> جاري الاتصال...</div>
-            </div>
+            <div id="Streamer-grid"><div class="loading"><i class="fa-solid fa-satellite-dish fa-spin"></i> جاري الاتصال...</div></div>
         </section>
     </div>
 
     <footer class="main-footer">
         <p>© 2026 Respect Streams. جميع الحقوق محفوظة.</p>
-        <div class="footer-social">
-            <a href="https://x.com/streamsrespect" target="_blank"><i class="fa-brands fa-x-twitter"></i></a>
-        </div>
+        <div class="footer-social"><a href="https://x.com/streamsrespect" target="_blank"><i class="fa-brands fa-x-twitter"></i></a></div>
     </footer>
 
     <script type="module" src="main.js"></script>
-    
-    <script>
-        document.onkeydown = function(e) {
-            if(e.keyCode == 123) return false;
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) return false;
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) return false;
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) return false;
-            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
-        }
-    </script>
-
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(reg => console.log('Service Worker Registered!', reg.scope))
-                    .catch(err => console.log('Service Worker Failed:', err));
+                navigator.serviceWorker.register('/sw.js').then(reg=>console.log('SW Registered')).catch(err=>console.log('SW Error:', err));
             });
         }
     </script>

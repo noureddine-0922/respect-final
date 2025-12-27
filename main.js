@@ -15,26 +15,35 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const messaging = getMessaging(app);
 
-// --- الاشتراك في الإشعارات ---
+// --- دالة الاشتراك في الإشعارات ---
 window.subscribeUser = async () => {
     try {
         const permission = await Notification.requestPermission();
         if (permission === 'granted') {
-            // 🔴🔴 استبدل النص التالي بالمفتاح من فايربيس 🔴🔴
-            const vapidKey = "BG9yEr9IjTr7thpTH2FA9i_4fyhbLY0tbbG8WDBKsjlmUCVaS45kJnQaKpBDcKjkqJuYCjNCcZjj9LVphjUlQ1U"; 
-            
+            // 🔴🔴🔴 ضع المفتاح الطويل الذي يبدأ بحرف B هنا 🔴🔴🔴
+      const vapidKey = "BDixhVEmvt_z5kUNrT6OYShBYOdsRo-EOrg976iSjmDFgAYzmOuOFNFQFmWlVAYBefR3gKyQa8kQ-YcLwzYeYRw";
+
+
             const token = await getToken(messaging, { vapidKey: vapidKey });
             if (token) {
                 console.log("Token:", token);
                 await addDoc(collection(db, "subscribers"), { token: token, date: new Date() });
-                alert("حدث خطأ في الاشتراك");
+                alert("✅ تم تفعيل التنبيهات بنجاح!");
                 document.getElementById('notifBtn').classList.add('subscribed');
+            } else {
+                alert("❌ لم يتم العثور على توكن.");
             }
-        } else { alert("يجب السماح بالإشعارات"); }
-    } catch (err) { console.error(err); alert("حدث خطأ في الاشتراك"); }
+        } else {
+            alert("⚠️ يجب السماح بالإشعارات من إعدادات المتصفح.");
+        }
+    } catch (err) {
+        console.error(err);
+        // هذا السطر بيعلمنا وش المشكلة بالضبط
+        alert("❌ خطأ: " + err.message);
+    }
 }
 
-// --- المتغيرات والدوال السابقة ---
+// --- باقي الأكواد الأساسية ---
 let allStreamers = [];
 let currentCategoryFilter = 'all';
 let currentStatusFilter = 'all';
@@ -54,7 +63,7 @@ async function checkMaintenance() {
     try {
         const docSnap = await getDoc(doc(db, "settings", "config"));
         if (docSnap.exists() && docSnap.data().maintenance === true) {
-            document.body.innerHTML = `<div style="display:flex;flex-direction:column;justify-content:center;align-items:center;height:100vh;background:#0b0e11;color:white;text-align:center;"><i class="fa-solid fa-triangle-exclamation" style="font-size:5rem;color:#ffcc00;margin-bottom:20px;"></i><h1 style="font-family:'Cairo';">الموقع تحت الصيانة</h1><p style="font-family:'Cairo';color:#ccc;">نعمل على تحسينات، سنعود قريباً!</p></div>`;
+            document.body.innerHTML = `<div style="display:flex;flex-direction:column;justify-content:center;align-items:center;height:100vh;background:#0b0e11;color:white;text-align:center;"><i class="fa-solid fa-triangle-exclamation" style="font-size:5rem;color:#ffcc00;margin-bottom:20px;"></i><h1>الموقع تحت الصيانة</h1></div>`;
             return true;
         }
     } catch(e) {}
