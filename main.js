@@ -21,7 +21,7 @@ window.subscribeUser = async () => {
         const permission = await Notification.requestPermission();
         if (permission === 'granted') {
             // 🔴🔴 استبدل النص التالي بالمفتاح من فايربيس 🔴🔴
-            const vapidKey = "BOj_J0jzOY9lwAN4OxfIoHlh6alWdUsC_GotTkej4JEMe3a9TV4amkbJRgdARGUXAjH5NgWIr-Tdrt4SrQMB-E4"; 
+            const vapidKey = "BG9yEr9IjTr7thpTH2FA9i_4fyhbLY0tbbG8WDBKsjlmUCVaS45kJnQaKpBDcKjkqJuYCjNCcZjj9LVphjUlQ1U"; 
             
             const token = await getToken(messaging, { vapidKey: vapidKey });
             if (token) {
