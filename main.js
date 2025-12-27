@@ -27,7 +27,7 @@ window.subscribeUser = async () => {
             if (token) {
                 console.log("Token:", token);
                 await addDoc(collection(db, "subscribers"), { token: token, date: new Date() });
-                alert("الخطأ هو:\n" + err.message);
+                alert("حدث خطأ في الاشتراك");
                 document.getElementById('notifBtn').classList.add('subscribed');
             }
         } else { alert("يجب السماح بالإشعارات"); }
