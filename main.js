@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBjEc-wdY6s6v0AiVg4texFrohLwDcdaiU",
@@ -13,9 +13,28 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// --- التحقق من وضع الصيانة (أول خطوة) ---
+async function checkMaintenance() {
+    try {
+        const docSnap = await getDoc(doc(db, "settings", "config"));
+        if (docSnap.exists() && docSnap.data().maintenance === true) {
+            // إذا الصيانة مفعلة، اخفِ كل شيء واظهر شاشة الصيانة
+            document.body.innerHTML = `
+                <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; background:#0b0e11; color:white; text-align:center;">
+                    <i class="fa-solid fa-triangle-exclamation" style="font-size:5rem; color:#ffcc00; margin-bottom:20px;"></i>
+                    <h1 style="font-family:'Cairo';">الموقع تحت الصيانة</h1>
+                    <p style="font-family:'Cairo'; color:#ccc;">نعمل على تحسينات في السيرفر، سنعود قريباً! 🛠️</p>
+                </div>
+            `;
+            return true; // توقف عن تنفيذ باقي الكود
+        }
+    } catch(e) { console.log("Maintenance check skipped"); }
+    return false;
+}
+
+// باقي الكود القديم (لن يعمل إذا كان الموقع في صيانة)
 let allStreamers = [];
-let currentCategoryFilter = 'all';
-let currentStatusFilter = 'all';
+// ... (نفس المتغيرات السابقة)
 
 const categoryNames = {
     'police': '<i class="fa-solid fa-handcuffs"></i> الشرطة',
@@ -28,21 +47,13 @@ const categoryNames = {
     'nwa': 'N.W.A', 'crypto': 'Crypto', 'yakuza': 'الياكوزا', 'oldschool': 'Old School'
 };
 
-// مودال الترحيب
-window.checkModal = () => {
-    const lastSeen = localStorage.getItem('lastSeenModal');
-    const now = new Date().getTime();
-    if (!lastSeen || now - lastSeen > 24 * 60 * 60 * 1000) {
-        document.getElementById('welcomeModal').classList.add('show');
-    }
-}
-window.closeModal = () => {
-    document.getElementById('welcomeModal').classList.remove('show');
-    localStorage.setItem('lastSeenModal', new Date().getTime());
-}
-window.checkModal();
+// ... (نفس كود المودال الترحيبي القديم) ...
 
 async function fetchStreamers() {
+    // 🛑 فحص الصيانة قبل جلب البيانات
+    const isMaintenance = await checkMaintenance();
+    if(isMaintenance) return; 
+
     const container = document.getElementById('Streamer-grid');
     try {
         const querySnapshot = await getDocs(collection(db, "streamers"));
@@ -59,6 +70,10 @@ async function fetchStreamers() {
     } catch (error) { console.error(error); }
 }
 
+// ... (انسخ باقي الدوال القديمة: renderStreamers, checkLiveStatus, updateGlobalStats, filters, etc.) ...
+// تأكد من نسخ الدوال كاملة من الكود السابق، فقط أضفت دالة checkMaintenance في البداية
+// سأكتب لك بقية الدوال الأساسية هنا لتنسخها كاملة وتريح رأسك:
+
 function renderStreamers(list) {
     const container = document.getElementById('Streamer-grid');
     container.innerHTML = ''; 
@@ -66,36 +81,24 @@ function renderStreamers(list) {
 
     list.forEach(streamer => {
         const catDisplay = categoryNames[streamer.category] || streamer.category;
-        
         const card = document.createElement('div');
         card.className = 'card'; 
         card.id = `card-${streamer.username}`;
-        
-        // الهيكل الجديد: جزء علوي ينقلب + زر سفلي ثابت
         card.innerHTML = `
             <div class="flip-wrapper">
                 <div class="card-inner">
                     <div class="card-front">
                         <div class="status-badge offline"><i class="fa-solid fa-power-off"></i> غير متصل</div>
                         <img src="${streamer.image}" alt="${streamer.name}" class="pfp">
-                        <div class="info">
-                            <h3>${streamer.name}</h3>
-                            <p>${streamer.icName}</p>
-                        </div>
+                        <div class="info"><h3>${streamer.name}</h3><p>${streamer.icName}</p></div>
                     </div>
-
                     <div class="card-back">
                         <div class="back-category">${catDisplay}</div>
-                        <div class="back-viewers">
-                            <span class="viewer-count">0</span> <i class="fa-solid fa-eye"></i>
-                        </div>
+                        <div class="back-viewers"><span class="viewer-count">0</span> <i class="fa-solid fa-eye"></i></div>
                     </div>
                 </div>
             </div>
-
-            <a href="https://kick.com/${streamer.username}" target="_blank" class="watch-btn">
-                <i class="fa-brands fa-kickstarter"></i> صفحة القناة
-            </a>
+            <a href="https://kick.com/${streamer.username}" target="_blank" class="watch-btn"><i class="fa-brands fa-kickstarter"></i> صفحة القناة</a>
         `;
         container.appendChild(card);
         checkLiveStatus(streamer.username, card);
@@ -109,36 +112,20 @@ async function checkLiveStatus(username, cardElement) {
         const index = allStreamers.findIndex(s => s.username === username);
 
         if (data && data.livestream) {
-            // تحديث البيانات
-            if(index > -1) {
-                allStreamers[index].isLive = true;
-                allStreamers[index].viewers = data.livestream.viewer_count;
-            }
-
+            if(index > -1) { allStreamers[index].isLive = true; allStreamers[index].viewers = data.livestream.viewer_count; }
             const cardFront = cardElement.querySelector('.card-front');
             const cardBack = cardElement.querySelector('.card-back');
             const btn = cardElement.querySelector('.watch-btn');
 
-            // تحديث الوجه الأمامي
             cardFront.classList.add('is-live');
-            const badge = cardFront.querySelector('.status-badge');
-            badge.className = 'status-badge online';
-            badge.innerHTML = '<i class="fa-solid fa-fire fire-anim"></i> بث مباشر';
-
-            // تحديث الوجه الخلفي (للمعلومات)
+            cardFront.querySelector('.status-badge').className = 'status-badge online';
+            cardFront.querySelector('.status-badge').innerHTML = '<i class="fa-solid fa-fire fire-anim"></i> بث مباشر';
             cardBack.querySelector('.viewer-count').innerText = data.livestream.viewer_count;
-
-            // تحديث الزر الثابت
             btn.innerHTML = 'تابع البث الآن 🔴';
             btn.classList.add('is-live-btn');
-
             document.getElementById('Streamer-grid').prepend(cardElement);
-
         } else {
-             if(index > -1) {
-                 allStreamers[index].isLive = false;
-                 allStreamers[index].viewers = 0;
-             }
+             if(index > -1) { allStreamers[index].isLive = false; allStreamers[index].viewers = 0; }
         }
         updateGlobalStats(); 
     } catch (e) { console.log(e); }
@@ -157,7 +144,6 @@ window.filterData = (cat) => {
     currentCategoryFilter = cat;
     applyFilters();
 }
-
 window.filterStatus = (status) => {
     document.querySelectorAll('.status-btn').forEach(btn => btn.classList.remove('active'));
     event.target.classList.add('active');
@@ -167,14 +153,10 @@ window.filterStatus = (status) => {
 
 function applyFilters() {
     let filteredList = allStreamers;
-    if (currentCategoryFilter !== 'all') {
-        filteredList = filteredList.filter(s => s.category === currentCategoryFilter);
-    }
-    if (currentStatusFilter === 'live') {
-        filteredList = filteredList.filter(s => s.isLive);
-    } else if (currentStatusFilter === 'offline') {
-        filteredList = filteredList.filter(s => !s.isLive);
-    }
+    if (currentCategoryFilter !== 'all') filteredList = filteredList.filter(s => s.category === currentCategoryFilter);
+    if (currentStatusFilter === 'live') filteredList = filteredList.filter(s => s.isLive);
+    else if (currentStatusFilter === 'offline') filteredList = filteredList.filter(s => !s.isLive);
+    
     const searchVal = document.getElementById('searchInput').value.toLowerCase();
     if(searchVal) {
         filteredList = filteredList.filter(s => 

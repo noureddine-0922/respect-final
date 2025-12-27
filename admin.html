@@ -3,49 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم - Respect Admin</title>
+    <title>لوحة القيادة - Respect Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { background-color: #0b0e11; color: white; font-family: 'Cairo', sans-serif; padding: 20px; margin: 0; }
+        body { background-color: #0b0e11; color: white; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; }
         
         /* شاشة الدخول */
-        #loginScreen {
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            height: 100vh; position: fixed; top: 0; left: 0; width: 100%;
-            background: #0b0e11; z-index: 1000;
-        }
-        .login-box {
-            background: #14171a; padding: 40px; border-radius: 16px; border: 1px solid #333;
-            text-align: center; width: 90%; max-width: 400px;
-            box-shadow: 0 0 50px rgba(83, 252, 24, 0.1);
-        }
-        .login-box h2 { margin-top: 0; color: #53fc18; }
+        #loginScreen { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; position: fixed; top: 0; left: 0; width: 100%; background: #0b0e11; z-index: 2000; }
+        .login-box { background: #14171a; padding: 40px; border-radius: 16px; border: 1px solid #333; text-align: center; width: 90%; max-width: 400px; }
+        .google-btn { background: white; color: #333; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 20px; width: 100%; padding: 12px; border-radius: 8px; border: none; cursor: pointer; }
         
-        /* أزرار الدخول */
-        .google-btn {
-            background: white; color: #333; font-weight: bold;
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-            margin-bottom: 20px; transition: 0.3s;
-        }
-        .google-btn:hover { background: #f1f1f1; transform: scale(1.02); }
-        .divider { margin: 20px 0; color: #888; font-size: 0.9rem; }
+        /* الهيدر والقائمة الجانبية */
+        .admin-wrapper { display: none; display: flex; min-height: 100vh; }
+        .sidebar { width: 250px; background: #14171a; padding: 20px; border-left: 1px solid #333; display: flex; flex-direction: column; }
+        .sidebar h2 { color: #53fc18; text-align: center; margin-bottom: 30px; }
+        .nav-btn { background: transparent; color: #ccc; text-align: right; padding: 15px; margin-bottom: 5px; border-radius: 8px; cursor: pointer; border: none; font-family: 'Cairo'; width: 100%; font-size: 1rem; }
+        .nav-btn:hover, .nav-btn.active { background: rgba(83, 252, 24, 0.1); color: #53fc18; font-weight: bold; }
+        .nav-btn i { margin-left: 10px; width: 20px; }
+        
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
+        .section { display: none; }
+        .section.active { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* لوحة التحكم */
-        #dashboard { display: none; max-width: 600px; margin: 0 auto; }
-        
-        input, select, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; font-family: 'Cairo'; box-sizing: border-box; }
-        input, select { background: #1a1d21; color: white; border: 1px solid #333; outline: none; }
-        input:focus { border-color: #53fc18; }
-        
-        button { background: #53fc18; color: black; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        button:hover { background: #42c713; }
-        
-        .logout-btn { background: #ff3333; color: white; margin-bottom: 20px; }
-        .logout-btn:hover { background: #cc0000; }
+        /* العناصر المشتركة */
+        input, select, textarea, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; font-family: 'Cairo'; box-sizing: border-box; }
+        input, select, textarea { background: #1a1d21; color: white; border: 1px solid #333; outline: none; }
+        input:focus, textarea:focus { border-color: #53fc18; }
+        button.action-btn { background: #53fc18; color: black; font-weight: bold; cursor: pointer; }
+        button.delete-btn { background: #ff3333; color: white; width: auto; padding: 5px 15px; cursor: pointer; }
+        button.edit-btn { background: #1DA1F2; color: white; width: auto; padding: 5px 15px; cursor: pointer; margin-left: 5px; }
 
+        /* قائمة الستريمرز */
         .streamer-item { background: #1a1d21; padding: 15px; margin-bottom: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333; }
-        .delete-btn { background: #ff3333; color: white; width: auto; padding: 5px 15px; }
+
+        /* تبويب السجلات */
+        .log-item { background: #1a1d21; padding: 10px; border-bottom: 1px solid #333; font-size: 0.9rem; color: #ccc; display: flex; justify-content: space-between; }
+        .log-time { color: #53fc18; font-size: 0.8rem; }
+
+        /* تبويب الصيانة */
+        .toggle-container { background: #1a1d21; padding: 20px; border-radius: 10px; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #53fc18; }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        /* نافذة التعديل (Modal) */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 3000; }
+        .modal-box { background: #14171a; padding: 20px; border-radius: 10px; width: 90%; max-width: 500px; border: 1px solid #53fc18; }
     </style>
 </head>
 <body>
@@ -53,71 +61,108 @@
     <div id="loginScreen">
         <div class="login-box">
             <h2>🔐 دخول الأدمن</h2>
-            
             <button class="google-btn" onclick="loginGoogle()">
-                <i class="fa-brands fa-google" style="color:#DB4437;"></i> تسجيل الدخول عبر Google
+                <i class="fa-brands fa-google" style="color:#DB4437;"></i> تسجيل الدخول بجوجل
             </button>
-
-            <div class="divider">أو عبر الإيميل</div>
-
-            <input type="email" id="emailInput" placeholder="البريد الإلكتروني">
-            <input type="password" id="passInput" placeholder="كلمة المرور">
-            <button onclick="loginEmail()">دخول</button>
-            <p id="loginError" style="color:red; display:none;">خطأ في المعلومات!</p>
         </div>
     </div>
 
-    <div id="dashboard">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h3 style="margin:0;">أهلاً, <span id="adminName" style="color:#53fc18">Admin</span></h3>
-            <button class="logout-btn" onclick="logout()" style="width:auto; margin:0;">🚪 خروج</button>
-        </div>
-        
-        <div class="container">
-            <h2>👑 إضافة ستريمر جديد</h2>
-            <input type="text" id="sName" placeholder="الاسم الظاهر (مثال: S5B)">
-            <input type="text" id="sUsername" placeholder="يوزر كيك (مثال: s5b)">
-            <input type="text" id="sIcName" placeholder="اسم الشخصية (مثال: ماثيو)">
-            <input type="text" id="sImage" placeholder="رابط الصورة الشخصية">
-            
-            <select id="sCategory">
-                <optgroup label="جهات حكومية">
+    <div class="admin-wrapper" id="adminWrapper" style="display:none;">
+        <aside class="sidebar">
+            <h2>RESPECT ADMIN</h2>
+            <button class="nav-btn active" onclick="showSection('add')"><i class="fa-solid fa-plus"></i> إضافة فردية</button>
+            <button class="nav-btn" onclick="showSection('manage')"><i class="fa-solid fa-list"></i> إدارة الستريمرز</button>
+            <button class="nav-btn" onclick="showSection('bulk')"><i class="fa-solid fa-layer-group"></i> إضافة جماعية</button>
+            <button class="nav-btn" onclick="showSection('settings')"><i class="fa-solid fa-gear"></i> الإعدادات والصيانة</button>
+            <button class="nav-btn" onclick="showSection('logs')"><i class="fa-solid fa-history"></i> سجل النشاطات</button>
+            <div style="margin-top:auto">
+                <button class="nav-btn" onclick="logout()" style="color:#ff3333"><i class="fa-solid fa-sign-out"></i> خروج</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div id="sec-add" class="section active">
+                <h3>👑 إضافة ستريمر جديد</h3>
+                <input type="text" id="sName" placeholder="الاسم الظاهر">
+                <input type="text" id="sUsername" placeholder="يوزر كيك (Username)">
+                <input type="text" id="sIcName" placeholder="اسم الشخصية">
+                <input type="text" id="sImage" placeholder="رابط الصورة">
+                <select id="sCategory">
                     <option value="police">👮‍♂️ الشرطة</option>
                     <option value="ems">🚑 الإسعاف</option>
-                    <option value="justice">⚖️ العدل</option>
-                    <option value="s.ops">🦅 قوات خاصة</option>
-                </optgroup>
-                <optgroup label="مدنيين">
                     <option value="citizen">🧍 مواطن</option>
-                </optgroup>
-                <optgroup label="عصابات وعائلات">
-                    <option value="plus">➕ عصابة البلس</option>
-                    <option value="brazil">🇧🇷 البرازيليين</option>
-                    <option value="east">🌏 عصابة الشرق</option>
-                    <option value="west">🤠 عصابة الغرب</option>
-                    <option value="middle">🖕 Middle Gang</option>
-                    <option value="nwa">🎤 N.W.A</option>
-                    <option value="crypto">💰 Crypto</option>
-                    <option value="yakuza">🐉 عائلة الياكوزا</option>
-                    <option value="oldschool">📻 Old School</option>
                     <option value="obeid">👑 عائلة عبيد</option>
-                </optgroup>
-            </select>
-            
-            <button onclick="addStreamer()">➕ إضافة للقائمة</button>
+                    <option value="plus">➕ البلس</option>
+                    <option value="brazil">🇧🇷 البرازيليين</option>
+                    <option value="east">🌏 الشرق</option>
+                    <option value="west">🤠 الغرب</option>
+                    <option value="nwa">🎤 N.W.A</option>
+                    </select>
+                <button class="action-btn" onclick="addStreamer()">إضافة</button>
+            </div>
 
-            <h2 style="margin-top: 30px;">📋 القائمة الحالية</h2>
-            <div id="listArea">جاري التحميل...</div>
+            <div id="sec-manage" class="section">
+                <h3>📋 قائمة الستريمرز</h3>
+                <input type="text" id="searchManage" placeholder="ابحث عن اسم..." onkeyup="loadStreamers()">
+                <div id="manageList">جاري التحميل...</div>
+            </div>
+
+            <div id="sec-bulk" class="section">
+                <h3>📦 إضافة جماعية</h3>
+                <p style="color:#888; font-size:0.9rem;">أدخل البيانات بالشكل التالي (كل شخص في سطر):<br>
+                <code>الاسم, اليوزر, الفئة, رابط الصورة</code></p>
+                <textarea id="bulkInput" rows="10" placeholder="مثال:
+S5B, s5b, police, https://image.com/1.png
+مودي, moody, ems, https://image.com/2.png"></textarea>
+                <button class="action-btn" onclick="bulkAddStreamers()">بدء الإضافة الجماعية</button>
+            </div>
+
+            <div id="sec-settings" class="section">
+                <h3>⚙️ إعدادات الموقع</h3>
+                <div class="toggle-container">
+                    <div>
+                        <strong>وضع الصيانة (Maintenance Mode)</strong><br>
+                        <small style="color:#888;">عند التفعيل، سيظهر للزوار صفحة "جاري الصيانة" ولن يعمل الموقع.</small>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="maintenanceToggle" onchange="toggleMaintenance()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div id="sec-logs" class="section">
+                <h3>📜 سجل النشاطات (آخر 50 عملية)</h3>
+                <div id="logsList">جاري جلب السجلات...</div>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal-overlay" id="editModal">
+        <div class="modal-box">
+            <h3>تعديل البيانات</h3>
+            <input type="hidden" id="editId">
+            <input type="text" id="editName" placeholder="الاسم">
+            <input type="text" id="editUsername" placeholder="اليوزر">
+            <input type="text" id="editIcName" placeholder="اسم الشخصية">
+            <input type="text" id="editImage" placeholder="رابط الصورة">
+            <select id="editCategory">
+                <option value="police">👮‍♂️ الشرطة</option>
+                <option value="ems">🚑 الإسعاف</option>
+                <option value="citizen">🧍 مواطن</option>
+                <option value="obeid">👑 عائلة عبيد</option>
+                <option value="plus">➕ البلس</option>
+                </select>
+            <button class="action-btn" onclick="saveEdit()">حفظ التعديلات</button>
+            <button class="delete-btn" onclick="closeEdit()" style="background:#555; width:100%; margin-top:10px;">إلغاء</button>
         </div>
     </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    // ✅ استدعاء Google Auth
-    import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, setDoc, getDoc, query, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-    // 🔴🔴 ألصق كود الـ Firebase Config حقك هنا 🔴🔴
     const firebaseConfig = {
         apiKey: "AIzaSyBjEc-wdY6s6v0AiVg4texFrohLwDcdaiU",
         authDomain: "respect-db-d1320.firebaseapp.com",
@@ -130,102 +175,185 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
-    const provider = new GoogleAuthProvider(); // إعداد مزود جوجل
-    const dbCollection = collection(db, "streamers");
+    const provider = new GoogleAuthProvider();
+    let currentUserEmail = "";
 
-    // مراقبة حالة الدخول
+    // --- التوثيق ---
     onAuthStateChanged(auth, (user) => {
         if (user) {
             document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('dashboard').style.display = 'block';
-            document.getElementById('adminName').innerText = user.displayName || user.email; // عرض الاسم
-            loadStreamers();
+            document.getElementById('adminWrapper').style.display = 'flex';
+            currentUserEmail = user.email;
+            checkMaintenanceStatus(); // جلب حالة الصيانة الحالية
+            loadLogs(); // جلب السجلات
         } else {
             document.getElementById('loginScreen').style.display = 'flex';
-            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('adminWrapper').style.display = 'none';
         }
     });
 
-    // 🟢 دالة الدخول بجوجل
-    window.loginGoogle = () => {
-        signInWithPopup(auth, provider)
-            .then((result) => {
-                // تم الدخول بنجاح
-            }).catch((error) => {
-                alert("خطأ في تسجيل الدخول: " + error.message);
-            });
-    }
+    window.loginGoogle = () => signInWithPopup(auth, provider);
+    window.logout = () => signOut(auth).then(() => location.reload());
 
-    // دالة الدخول بالإيميل (القديمة)
-    window.loginEmail = () => {
-        const email = document.getElementById('emailInput').value;
-        const pass = document.getElementById('passInput').value;
-        signInWithEmailAndPassword(auth, email, pass)
-            .catch((error) => {
-                document.getElementById('loginError').style.display = 'block';
-                document.getElementById('loginError').innerText = "خطأ: " + error.message;
-            });
-    }
-
-    window.logout = () => {
-        if(confirm("تسجيل خروج؟")) {
-            signOut(auth).then(() => location.reload());
-        }
-    }
-
-    // --- دوال قاعدة البيانات (نفس السابق) ---
-    const catMap = {
-        'police': 'الشرطة', 'ems': 'الإسعاف', 'justice': 'العدل', 's.ops': 'قوات خاصة',
-        'citizen': 'مواطن', 'plus': 'البلس', 'brazil': 'البرازيليين', 'east': 'الشرق',
-        'west': 'الغرب', 'middle': 'Middle', 'nwa': 'N.W.A', 'crypto': 'Crypto',
-        'yakuza': 'الياكوزا', 'oldschool': 'Old School', 'obeid': 'عائلة عبيد'
+    // --- التنقل بين التبويبات ---
+    window.showSection = (secId) => {
+        document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(`sec-${secId}`).classList.add('active');
+        event.currentTarget.classList.add('active');
+        if(secId === 'manage') loadStreamers();
+        if(secId === 'logs') loadLogs();
     };
 
-    window.addStreamer = async () => {
-        const name = document.getElementById('sName').value;
-        const username = document.getElementById('sUsername').value;
-        const icName = document.getElementById('sIcName').value;
-        const image = document.getElementById('sImage').value;
-        const category = document.getElementById('sCategory').value;
-        if(!username) return alert("اليوزر مطلوب!");
-
+    // --- 1. سجل النشاطات (Logger) ---
+    async function logActivity(action, details) {
         try {
-            await addDoc(dbCollection, { name, username, icName, image, category });
-            alert("تمت الإضافة! ✅");
-            document.getElementById('sName').value = '';
-            document.getElementById('sUsername').value = '';
-            document.getElementById('sIcName').value = '';
-            document.getElementById('sImage').value = '';
-            loadStreamers();
-        } catch (e) { alert("خطأ: " + e.message); }
-    }
-
-    async function loadStreamers() {
-        const listArea = document.getElementById('listArea');
-        listArea.innerHTML = "جاري التحميل...";
-        try {
-            const querySnapshot = await getDocs(dbCollection);
-            listArea.innerHTML = "";
-            if (querySnapshot.empty) { listArea.innerHTML = "لا يوجد بيانات"; return; }
-            querySnapshot.forEach((docSnap) => {
-                const data = docSnap.data();
-                const catName = catMap[data.category] || data.category;
-                listArea.innerHTML += `
-                    <div class="streamer-item">
-                        <div>
-                            <strong>${data.name}</strong> (${data.username})<br>
-                            <small style="color:#888">${data.icName} - ${catName}</small>
-                        </div>
-                        <button class="delete-btn" onclick="deleteStreamer('${docSnap.id}')">حذف 🗑️</button>
-                    </div>
-                `;
+            await addDoc(collection(db, "logs"), {
+                action: action,
+                details: details,
+                user: currentUserEmail,
+                timestamp: serverTimestamp()
             });
-        } catch(e) { console.error(e); }
+        } catch(e) { console.error("Log error", e); }
     }
 
-    window.deleteStreamer = async (id) => {
-        if(confirm("حذف؟")) { await deleteDoc(doc(db, "streamers", id)); loadStreamers(); }
+    async function loadLogs() {
+        const list = document.getElementById('logsList');
+        list.innerHTML = "جاري التحميل...";
+        try {
+            const q = query(collection(db, "logs"), orderBy("timestamp", "desc"), limit(50));
+            const snapshot = await getDocs(q);
+            list.innerHTML = "";
+            snapshot.forEach(doc => {
+                const d = doc.data();
+                const time = d.timestamp ? new Date(d.timestamp.toDate()).toLocaleString() : "الآن";
+                list.innerHTML += `
+                    <div class="log-item">
+                        <div><strong style="color:#53fc18">[${d.action}]</strong> ${d.details}<br><small>بواسطة: ${d.user}</small></div>
+                        <div class="log-time">${time}</div>
+                    </div>`;
+            });
+        } catch(e) { list.innerHTML = "خطأ في جلب السجلات"; }
     }
+
+    // --- 2. الإضافة الفردية ---
+    window.addStreamer = async () => {
+        const data = {
+            name: document.getElementById('sName').value,
+            username: document.getElementById('sUsername').value,
+            icName: document.getElementById('sIcName').value,
+            image: document.getElementById('sImage').value,
+            category: document.getElementById('sCategory').value
+        };
+        if(!data.username) return alert("اليوزر مطلوب");
+        await addDoc(collection(db, "streamers"), data);
+        await logActivity("إضافة", `تمت إضافة ${data.name}`);
+        alert("تمت الإضافة");
+        // تفريغ الحقول...
+    };
+
+    // --- 3. إدارة (تعديل وحذف) ---
+    window.loadStreamers = async () => {
+        const search = document.getElementById('searchManage').value.toLowerCase();
+        const list = document.getElementById('manageList');
+        list.innerHTML = "جاري التحميل...";
+        const snapshot = await getDocs(collection(db, "streamers"));
+        list.innerHTML = "";
+        snapshot.forEach(docSnap => {
+            const d = docSnap.data();
+            if(d.name.toLowerCase().includes(search) || d.username.includes(search)) {
+                // نمرر البيانات كـ نص مشفر عشان ما يخرب الـ HTML
+                const dataString = encodeURIComponent(JSON.stringify({id: docSnap.id, ...d}));
+                list.innerHTML += `
+                    <div class="streamer-item">
+                        <span>${d.name} (${d.username})</span>
+                        <div>
+                            <button class="edit-btn" onclick="openEdit('${dataString}')">تعديل</button>
+                            <button class="delete-btn" onclick="deleteItem('${docSnap.id}', '${d.name}')">حذف</button>
+                        </div>
+                    </div>`;
+            }
+        });
+    };
+
+    // فتح نافذة التعديل
+    window.openEdit = (dataStr) => {
+        const data = JSON.parse(decodeURIComponent(dataStr));
+        document.getElementById('editId').value = data.id;
+        document.getElementById('editName').value = data.name;
+        document.getElementById('editUsername').value = data.username;
+        document.getElementById('editIcName').value = data.icName;
+        document.getElementById('editImage').value = data.image;
+        document.getElementById('editCategory').value = data.category;
+        document.getElementById('editModal').style.display = 'flex';
+    };
+
+    window.closeEdit = () => document.getElementById('editModal').style.display = 'none';
+
+    window.saveEdit = async () => {
+        const id = document.getElementById('editId').value;
+        const newData = {
+            name: document.getElementById('editName').value,
+            username: document.getElementById('editUsername').value,
+            icName: document.getElementById('editIcName').value,
+            image: document.getElementById('editImage').value,
+            category: document.getElementById('editCategory').value
+        };
+        await updateDoc(doc(db, "streamers", id), newData);
+        await logActivity("تعديل", `تعديل بيانات ${newData.name}`);
+        closeEdit();
+        loadStreamers();
+        alert("تم الحفظ!");
+    };
+
+    window.deleteItem = async (id, name) => {
+        if(confirm("حذف؟")) {
+            await deleteDoc(doc(db, "streamers", id));
+            await logActivity("حذف", `حذف الستريمر ${name}`);
+            loadStreamers();
+        }
+    };
+
+    // --- 4. الإضافة الجماعية ---
+    window.bulkAddStreamers = async () => {
+        const text = document.getElementById('bulkInput').value;
+        const lines = text.split('\n');
+        let count = 0;
+        
+        for(let line of lines) {
+            const parts = line.split(',');
+            if(parts.length >= 3) {
+                const name = parts[0].trim();
+                const username = parts[1].trim();
+                const category = parts[2].trim();
+                const image = parts[3] ? parts[3].trim() : "https://via.placeholder.com/150";
+                
+                await addDoc(collection(db, "streamers"), { name, username, category, image, icName: name });
+                count++;
+            }
+        }
+        await logActivity("إضافة جماعية", `تمت إضافة ${count} ستريمر`);
+        alert(`تمت إضافة ${count} بنجاح!`);
+        document.getElementById('bulkInput').value = "";
+    };
+
+    // --- 5. وضع الصيانة ---
+    // نستخدم مستند خاص اسمه settings/config
+    window.checkMaintenanceStatus = async () => {
+        try {
+            const docSnap = await getDoc(doc(db, "settings", "config"));
+            if (docSnap.exists()) {
+                document.getElementById('maintenanceToggle').checked = docSnap.data().maintenance;
+            }
+        } catch(e) { console.log("Settings not initialized yet"); }
+    };
+
+    window.toggleMaintenance = async () => {
+        const status = document.getElementById('maintenanceToggle').checked;
+        await setDoc(doc(db, "settings", "config"), { maintenance: status }, { merge: true });
+        await logActivity("صيانة", `تغيير وضع الصيانة إلى: ${status ? "مفعل" : "معطل"}`);
+    };
+
 </script>
 </body>
 </html>
