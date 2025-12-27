@@ -1,7 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// 🔴🔴 ألصق كود الـ Firebase Config حقك هنا 🔴🔴
 const firebaseConfig = {
     apiKey: "AIzaSyBjEc-wdY6s6v0AiVg4texFrohLwDcdaiU",
     authDomain: "respect-db-d1320.firebaseapp.com",
@@ -17,6 +16,7 @@ const db = getFirestore(app);
 let allStreamers = [];
 let currentCategoryFilter = 'all';
 let currentStatusFilter = 'all';
+let totalViewersGlobal = 0; // متغير لحساب إجمالي المشاهدين
 
 const categoryNames = {
     'police': '<i class="fa-solid fa-handcuffs"></i> الشرطة',
@@ -29,22 +29,18 @@ const categoryNames = {
     'nwa': 'N.W.A', 'crypto': 'Crypto', 'yakuza': 'الياكوزا', 'oldschool': 'Old School'
 };
 
-// --- إدارة النافذة الترحيبية (مرة كل 24 ساعة) ---
+// --- المودال الترحيبي ---
 window.checkModal = () => {
     const lastSeen = localStorage.getItem('lastSeenModal');
     const now = new Date().getTime();
-    
     if (!lastSeen || now - lastSeen > 24 * 60 * 60 * 1000) {
         document.getElementById('welcomeModal').classList.add('show');
     }
 }
-
 window.closeModal = () => {
     document.getElementById('welcomeModal').classList.remove('show');
     localStorage.setItem('lastSeenModal', new Date().getTime());
 }
-
-// تشغيل فحص المودال عند البدء
 window.checkModal();
 
 async function fetchStreamers() {
@@ -53,7 +49,7 @@ async function fetchStreamers() {
         const querySnapshot = await getDocs(collection(db, "streamers"));
         allStreamers = []; 
         querySnapshot.forEach((doc) => {
-            allStreamers.push({ id: doc.id, ...doc.data(), isLive: false, viewers: 0, startTime: null });
+            allStreamers.push({ id: doc.id, ...doc.data(), isLive: false, viewers: 0 });
         });
         document.getElementById('totalStreamers').innerText = allStreamers.length;
         if (allStreamers.length === 0) {
@@ -71,39 +67,33 @@ function renderStreamers(list) {
 
     list.forEach(streamer => {
         const catDisplay = categoryNames[streamer.category] || streamer.category;
+        
         const card = document.createElement('div');
         card.className = 'card'; 
         card.id = `card-${streamer.username}`;
         
-        // حساب وقت البث إذا كان لايف
-        let uptime = "00:00";
-        if(streamer.isLive && streamer.startTime) {
-            const diff = new Date() - new Date(streamer.startTime);
-            const hours = Math.floor(diff / 3600000);
-            const mins = Math.floor((diff % 3600000) / 60000);
-            uptime = `${hours}س ${mins}د`;
-        }
-
-        // إحصائيات البث (تظهر فقط إذا لايف)
-        const statsHTML = streamer.isLive ? `
-            <div class="stream-stats">
-                <span><i class="fa-solid fa-users stat-icon"></i> ${streamer.viewers}</span>
-                <span><i class="fa-solid fa-clock stat-icon"></i> ${uptime}</span>
-            </div>
-        ` : '';
-
+        // بناء هيكل البطاقة المنقلبة (Front & Back)
         card.innerHTML = `
-            <div class="status-badge offline"><i class="fa-solid fa-power-off"></i> غير متصل</div>
-            <img src="${streamer.image}" alt="${streamer.name}" class="pfp">
-            <div class="info">
-                <h3>${streamer.name}</h3>
-                <p>${streamer.icName}</p>
-                <span class="category-tag">${catDisplay}</span>
+            <div class="card-inner">
+                <div class="card-front">
+                    <div class="status-badge offline"><i class="fa-solid fa-power-off"></i> غير متصل</div>
+                    <img src="${streamer.image}" alt="${streamer.name}" class="pfp">
+                    <div class="info">
+                        <h3>${streamer.name}</h3>
+                        <p>${streamer.icName}</p>
+                    </div>
+                </div>
+
+                <div class="card-back">
+                    <div class="back-category">${catDisplay}</div>
+                    <div class="back-viewers">
+                        <span class="viewer-count">0</span> <i class="fa-solid fa-eye"></i>
+                    </div>
+                    <a href="https://kick.com/${streamer.username}" target="_blank" class="watch-btn">
+                        <i class="fa-brands fa-kickstarter"></i> صفحة القناة
+                    </a>
+                </div>
             </div>
-            ${statsHTML}
-            <a href="https://kick.com/${streamer.username}" target="_blank" class="watch-btn">
-                <i class="fa-brands fa-kickstarter"></i> صفحة القناة
-            </a>
         `;
         container.appendChild(card);
         checkLiveStatus(streamer.username, card);
@@ -117,38 +107,47 @@ async function checkLiveStatus(username, cardElement) {
         const index = allStreamers.findIndex(s => s.username === username);
 
         if (data && data.livestream) {
-            // تحديث البيانات
+            // تحديث بيانات الستريمر
             if(index > -1) {
                 allStreamers[index].isLive = true;
                 allStreamers[index].viewers = data.livestream.viewer_count;
-                allStreamers[index].startTime = data.livestream.created_at;
             }
 
-            cardElement.classList.add('is-live');
-            const badge = cardElement.querySelector('.status-badge');
+            const cardFront = cardElement.querySelector('.card-front');
+            const cardBack = cardElement.querySelector('.card-back');
+            
+            // تحديث الوجه الأمامي
+            cardFront.classList.add('is-live');
+            const badge = cardFront.querySelector('.status-badge');
             badge.className = 'status-badge online';
-            // ✅ إضافة النار المتحركة
             badge.innerHTML = '<i class="fa-solid fa-fire fire-anim"></i> بث مباشر';
-            
-            // تحديث الإحصائيات في البطاقة مباشرة
-            // (نعيد رسم البطاقة لتحديث الوقت والمشاهدين بشكل صحيح)
-            // لكن للسرعة سنحدث الزر فقط هنا
-            
-            const btn = cardElement.querySelector('.watch-btn');
+
+            // تحديث الوجه الخلفي
+            cardBack.querySelector('.viewer-count').innerText = data.livestream.viewer_count;
+            const btn = cardBack.querySelector('.watch-btn');
             btn.innerHTML = 'تابع البث الآن 🔴';
-            
+            btn.classList.add('is-live-btn');
+
             document.getElementById('Streamer-grid').prepend(cardElement);
 
         } else {
-             if(index > -1) allStreamers[index].isLive = false;
+             if(index > -1) {
+                 allStreamers[index].isLive = false;
+                 allStreamers[index].viewers = 0;
+             }
         }
-        updateLiveCount();
+        updateGlobalStats(); // تحديث العدادات العامة
     } catch (e) { console.log(e); }
 }
 
-function updateLiveCount() {
+// دالة لحساب وتحديث الإحصائيات العامة (عداد المشاهدين والبثوث)
+function updateGlobalStats() {
     const liveCount = allStreamers.filter(s => s.isLive).length;
     document.getElementById('liveNow').innerText = liveCount;
+
+    // جمع كل المشاهدين
+    const totalViewers = allStreamers.reduce((sum, s) => sum + (s.viewers || 0), 0);
+    document.getElementById('totalViewersCount').innerText = totalViewers > 0 ? totalViewers : '0';
 }
 
 window.filterData = (cat) => {
@@ -161,9 +160,6 @@ window.filterData = (cat) => {
 window.filterStatus = (status) => {
     document.querySelectorAll('.status-btn').forEach(btn => btn.classList.remove('active'));
     event.target.classList.add('active');
-    if(status === 'all') event.target.classList.add('all');
-    if(status === 'live') event.target.classList.add('live');
-    if(status === 'offline') event.target.classList.add('offline');
     currentStatusFilter = status;
     applyFilters();
 }
