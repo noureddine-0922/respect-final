@@ -4,20 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Respect Streams | ريسبكت ستريمرز</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0b0e11">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://cdn.discordapp.com/attachments/1436149485167185940/1454355201539702905/logo.png?ex=6950c954&is=694f77d4&hm=6f5fd0f1197cc84ffc9d2e18f97efba791ef75b01f7da85a79702ae22778b0b8&">
+
     <link rel="icon" type="image/png" href="https://cdn.discordapp.com/attachments/1436149485167185940/1454355201539702905/logo.png?ex=6950c954&is=694f77d4&hm=6f5fd0f1197cc84ffc9d2e18f97efba791ef75b01f7da85a79702ae22778b0b8&">
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body oncontextmenu="return false">
 
     <div class="modal-overlay" id="welcomeModal">
         <div class="modal-content">
             <i class="fa-solid fa-xmark modal-close" onclick="closeModal()"></i>
             <img src="https://cdn.discordapp.com/attachments/1436149485167185940/1454355201539702905/logo.png?ex=6950c954&is=694f77d4&hm=6f5fd0f1197cc84ffc9d2e18f97efba791ef75b01f7da85a79702ae22778b0b8&" alt="Logo" class="modal-logo">
-            <h2 style="color:white; margin:0 0 10px 0;">أهلاً بك في ريسبكت!</h2>
-            <p style="color:#ccc;">تابع حالة ستريمرز السيرفر لحظة بلحظة.<br>تواصل معنا للدعم والاقتراحات!</p>
+            <h2 style="color:white; margin:0 0 10px 0;">أهلاً بك في ريسبكت ستريمرز!</h2>
+            <p style="color:#ccc;">تابع حالة ستريمرز ريسبكت لحظة بلحظة.<br>تطبيقنا متاح الآن، ثبت الموقع واستمتع!</p>
             <a href="https://x.com/streamsrespect" target="_blank" class="modal-btn"><i class="fa-brands fa-x-twitter"></i> تواصل معنا</a>
         </div>
     </div>
@@ -94,13 +102,14 @@
     </div>
 
     <footer class="main-footer">
-        <p>© 2025 Respect Streams. جميع الحقوق محفوظة.</p>
+        <p>© 2026 Respect Streams. جميع الحقوق محفوظة.</p>
         <div class="footer-social">
             <a href="https://x.com/streamsrespect" target="_blank"><i class="fa-brands fa-x-twitter"></i></a>
         </div>
     </footer>
 
     <script type="module" src="main.js"></script>
+    
     <script>
         document.onkeydown = function(e) {
             if(e.keyCode == 123) return false;
@@ -108,6 +117,16 @@
             if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) return false;
             if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) return false;
             if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
+        }
+    </script>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('Service Worker Registered!', reg.scope))
+                    .catch(err => console.log('Service Worker Failed:', err));
+            });
         }
     </script>
 </body>

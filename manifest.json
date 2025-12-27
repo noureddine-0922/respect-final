@@ -1,0 +1,22 @@
+{
+  "name": "Respect Streams",
+  "short_name": "Respect",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#0b0e11",
+  "theme_color": "#0b0e11",
+  "description": "تابع حالة ستريمرز ريسبكت لحظة بلحظة",
+  "icons": [
+    {
+      "src": "https://cdn.discordapp.com/attachments/1436149485167185940/1454355201539702905/logo.png?ex=6950c954&is=694f77d4&hm=6f5fd0f1197cc84ffc9d2e18f97efba791ef75b01f7da85a79702ae22778b0b8&",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://cdn.discordapp.com/attachments/1436149485167185940/1454355201539702905/logo.png?ex=6950c954&is=694f77d4&hm=6f5fd0f1197cc84ffc9d2e18f97efba791ef75b01f7da85a79702ae22778b0b8&",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
+
