@@ -27,7 +27,7 @@ window.subscribeUser = async () => {
             if (token) {
                 console.log("Token:", token);
                 await addDoc(collection(db, "subscribers"), { token: token, date: new Date() });
-                alert("تم تفعيل التنبيهات بنجاح! 🔔");
+                alert("الخطأ هو:\n" + err.message);
                 document.getElementById('notifBtn').classList.add('subscribed');
             }
         } else { alert("يجب السماح بالإشعارات"); }
