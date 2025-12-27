@@ -7,13 +7,13 @@
     <style>
         body { background-color: #0b0e11; color: white; font-family: 'Cairo', sans-serif; padding: 20px; }
         .container { max-width: 600px; margin: 0 auto; }
-        input, select, button { width: 100%; padding: 10px; margin: 10px 0; border-radius: 8px; border: none; }
-        input, select { background: #1a1d21; color: white; border: 1px solid #333; }
-        button { background: #53fc18; color: black; font-weight: bold; cursor: pointer; }
-        button:hover { background: #8a2be2; color: white; }
-        .streamer-item { background: #14171a; padding: 10px; margin-bottom: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333; }
+        input, select, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; font-family: 'Cairo'; }
+        input, select { background: #1a1d21; color: white; border: 1px solid #333; outline: none; }
+        button { background: #53fc18; color: black; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:hover { background: #42c713; }
+        .streamer-item { background: #14171a; padding: 15px; margin-bottom: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333; }
         .delete-btn { background: #ff3333; color: white; width: auto; padding: 5px 15px; }
-        h2 { border-bottom: 2px solid #53fc18; padding-bottom: 10px; }
+        h2 { border-bottom: 2px solid #53fc18; padding-bottom: 10px; color: #53fc18; }
     </style>
 </head>
 <body>
@@ -24,15 +24,31 @@
     <input type="text" id="sUsername" placeholder="يوزر كيك (مثال: s5b)">
     <input type="text" id="sIcName" placeholder="اسم الشخصية (مثال: ماثيو)">
     <input type="text" id="sImage" placeholder="رابط الصورة الشخصية">
+    
     <select id="sCategory">
-        <option value="police">الشرطة</option>
-        <option value="gangs">عصابات</option>
-        <option value="citizen">مواطن</option>
-        <option value="s.ops">قوات خاصة</option>
-        <option value="admin">إدارة</option>
-        <option value="عائلة عبيد">عائلة عبيد</option>
-        <option value="عصابة البلس">عصابة البلس</option>
+        <optgroup label="جهات حكومية">
+            <option value="police">الشرطة </option>
+            <option value="ems">الإسعاف </option>
+            <option value="justice">العدل </option>
+            <option value="s.ops">قوات خاصة </option>
+        </optgroup>
+        <optgroup label="مدنيين">
+            <option value="citizen">مواطن </option>
+        </optgroup>
+        <optgroup label="عصابات وعائلات">
+            <option value="plus">عصابة البلس </option>
+            <option value="brazil">البرازيليين </option>
+            <option value="east">عصابة الشرق </option>
+            <option value="west">عصابة الغرب </option>
+            <option value="middle">Middle Gang </option>
+            <option value="nwa">N.W.A 🎤</option>
+            <option value="crypto">Crypto </option>
+            <option value="yakuza">عائلة الياكوزا </option>
+            <option value="oldschool">Old School </option>
+            <option value="obeid">عائلة عبيد </option>
+        </optgroup>
     </select>
+    
     <button onclick="addStreamer()">➕ إضافة للقائمة</button>
 
     <h2>📋 القائمة الحالية</h2>
@@ -43,7 +59,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // ✅✅ إعدادات Firebase المصححة ✅✅
+    // 🔴🔴 ألصق كود الـ Firebase Config حقك هنا 🔴🔴
     const firebaseConfig = {
         apiKey: "AIzaSyBjEc-wdY6s6v0AiVg4texFrohLwDcdaiU",
         authDomain: "respect-db-d1320.firebaseapp.com",
@@ -53,12 +69,18 @@
         appId: "1:823436634480:web:3380974cce87d8e82b07b5"
     };
 
-    // تهيئة Firebase
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const dbCollection = collection(db, "streamers");
 
-    // إضافة ستريمر
+    // قاموس للترجمة في صفحة الأدمن عشان تعرف مين يتبع مين
+    const catMap = {
+        'police': 'الشرطة', 'ems': 'الإسعاف', 'justice': 'العدل', 's.ops': 'قوات خاصة',
+        'citizen': 'مواطن', 'plus': 'البلس', 'brazil': 'البرازيليين', 'east': 'الشرق',
+        'west': 'الغرب', 'middle': 'Middle', 'nwa': 'N.W.A', 'crypto': 'Crypto',
+        'yakuza': 'الياكوزا', 'oldschool': 'Old School', 'obeid': 'عائلة عبيد'
+    };
+
     window.addStreamer = async () => {
         const name = document.getElementById('sName').value;
         const username = document.getElementById('sUsername').value;
@@ -69,18 +91,14 @@
         if(!username) return alert("اليوزر مطلوب!");
 
         try {
-            await addDoc(dbCollection, {
-                name, username, icName, image, category
-            });
-            alert("تمت الإضافة بنجاح! ✅");
+            await addDoc(dbCollection, { name, username, icName, image, category });
+            alert("تمت الإضافة! ✅");
             location.reload();
         } catch (e) {
             alert("خطأ: " + e.message);
-            console.error(e);
         }
     }
 
-    // جلب القائمة
     async function loadStreamers() {
         const querySnapshot = await getDocs(dbCollection);
         const listArea = document.getElementById('listArea');
@@ -88,11 +106,13 @@
         
         querySnapshot.forEach((docSnap) => {
             const data = docSnap.data();
+            // استخدام القاموس لعرض الاسم بالعربي
+            const catName = catMap[data.category] || data.category;
             listArea.innerHTML += `
                 <div class="streamer-item">
                     <div>
                         <strong>${data.name}</strong> (${data.username})<br>
-                        <small>${data.category}</small>
+                        <small style="color:#888">${catName}</small>
                     </div>
                     <button class="delete-btn" onclick="deleteStreamer('${docSnap.id}')">حذف 🗑️</button>
                 </div>
@@ -100,17 +120,14 @@
         });
     }
 
-    // حذف ستريمر
     window.deleteStreamer = async (id) => {
-        if(confirm("متاكد تبي تحذفه؟")) {
+        if(confirm("متاكد تبي تحذف؟")) {
             await deleteDoc(doc(db, "streamers", id));
             location.reload();
         }
     }
-
     loadStreamers();
 </script>
-
 </body>
 </html>
 

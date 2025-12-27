@@ -5,73 +5,83 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Respect Streams | ريسبكت ستريمرز</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        /* الستايل الأساسي عشان يطلع الشكل حلو */
-        body { background-color: #0b0e11; color: white; font-family: 'Cairo', sans-serif; margin: 0; padding: 20px; }
-        .header { text-align: center; margin-bottom: 30px; }
-        .header h1 { color: #53fc18; text-shadow: 0 0 10px rgba(83, 252, 24, 0.5); font-size: 2.5rem; margin: 0; }
+        :root { --kick-green: #53fc18; --dark-bg: #0b0e11; --card-bg: #14171a; }
+        * { box-sizing: border-box; }
+        body { background-color: var(--dark-bg); color: white; font-family: 'Cairo', sans-serif; margin: 0; padding: 20px; overflow-x: hidden; }
         
-        /* الشبكة (Grid) */
-        #Streamer-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
-            padding: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
+        .header { text-align: center; margin-bottom: 40px; padding-top: 20px; }
+        .header h1 { color: var(--kick-green); font-size: 2.8rem; margin: 0; text-shadow: 0 0 20px rgba(83, 252, 24, 0.4); text-transform: uppercase; }
+        .header p { color: #888; font-size: 1.1rem; margin-top: 10px; }
 
-        /* البطاقة */
-        .card {
-            background: #14171a;
-            border-radius: 15px;
-            padding: 20px;
-            text-align: center;
-            border: 1px solid #333;
-            transition: transform 0.3s;
-            position: relative;
-            overflow: hidden;
-        }
-        .card:hover { transform: translateY(-5px); }
-        
-        .pfp { width: 80px; height: 80px; border-radius: 50%; border: 3px solid #333; object-fit: cover; margin-bottom: 10px; }
-        
-        .status { 
-            position: absolute; top: 10px; right: 10px; 
-            background: #333; padding: 5px 10px; border-radius: 5px; 
-            font-size: 0.8rem; font-weight: bold; 
-        }
-        
-        .info h3 { margin: 5px 0; color: white; }
-        .info p { color: #888; margin: 5px 0; font-size: 0.9rem; }
-        
-        .category-badge {
-            background: #23262a; color: #ccc; padding: 2px 8px; 
-            border-radius: 4px; font-size: 0.8rem; display: inline-block; margin: 5px 0;
-        }
+        .controls { max-width: 900px; margin: 0 auto 30px auto; text-align: center; }
+        .search-box { position: relative; width: 100%; max-width: 500px; margin: 0 auto 20px auto; }
+        .search-box input { width: 100%; padding: 15px 50px 15px 20px; border-radius: 50px; background: #1a1d21; border: 2px solid #333; color: white; font-family: 'Cairo'; outline: none; }
+        .search-box i { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); color: #777; }
 
-        .watch-btn {
-            display: block; width: 100%; padding: 10px 0; margin-top: 15px;
-            background: #23262a; color: white; text-decoration: none;
-            border-radius: 8px; font-weight: bold; transition: 0.3s;
-        }
-        .watch-btn:hover { background: #53fc18; color: black; }
+        .filters { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+        .filter-btn { background: #23262a; color: white; border: none; padding: 8px 15px; border-radius: 20px; cursor: pointer; transition: 0.3s; font-family: 'Cairo'; font-size: 0.9rem; }
+        .filter-btn:hover, .filter-btn.active { background: var(--kick-green); color: black; font-weight: bold; transform: scale(1.05); }
+
+        #Streamer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; max-width: 1200px; margin: 0 auto; }
+        .card { background: var(--card-bg); border-radius: 16px; padding: 25px; text-align: center; border: 1px solid #2a2e35; position: relative; transition: all 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .card:hover { transform: translateY(-10px); }
+        .card.is-live { border-color: var(--kick-green); box-shadow: 0 0 20px rgba(83, 252, 24, 0.15); }
+        
+        .pfp { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #333; margin-bottom: 15px; }
+        .card.is-live .pfp { border-color: var(--kick-green); }
+        
+        .status-badge { position: absolute; top: 15px; left: 15px; background: #333; color: #888; padding: 5px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: bold; }
+        .card.is-live .status-badge { background: var(--kick-green); color: black; }
+
+        .category { display: inline-block; background: #23262a; color: #ccc; padding: 4px 12px; border-radius: 6px; font-size: 0.8rem; margin-top: 10px; }
+        .watch-btn { display: block; width: 100%; padding: 12px; margin-top: 20px; background: #23262a; color: white; text-decoration: none; border-radius: 10px; transition: 0.3s; }
+        .watch-btn:hover { background: white; color: black; }
+        .card.is-live .watch-btn { background: var(--kick-green); color: black; }
+
+        .loading { grid-column: 1 / -1; text-align: center; padding: 50px; color: #888; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1>RESPECT STREAMS 👑</h1>
+        <h1>RESPECT STREAMS</h1>
         <p>تابع حالة ستريمرز ريسبكت لحظة بلحظة</p>
     </div>
 
+    <div class="controls">
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="ابحث عن الاسم أو العصابة...">
+            <i class="fa-solid fa-search"></i>
+        </div>
+
+        <div class="filters">
+            <button class="filter-btn active" onclick="filterData('all')">الكل</button>
+            <button class="filter-btn" onclick="filterData('police')">الشرطة </button>
+            <button class="filter-btn" onclick="filterData('ems')">الإسعاف </button>
+            <button class="filter-btn" onclick="filterData('justice')">العدل </button>
+            <button class="filter-btn" onclick="filterData('s.ops')">قوات خاصة </button>
+            <button class="filter-btn" onclick="filterData('citizen')">مواطن </button>
+            
+            <button class="filter-btn" onclick="filterData('obeid')">عائلة عبيد</button>
+            <button class="filter-btn" onclick="filterData('plus')">البلس</button>
+            <button class="filter-btn" onclick="filterData('brazil')">البرازيليين</button>
+            <button class="filter-btn" onclick="filterData('east')">عصابة الشرق</button>
+            <button class="filter-btn" onclick="filterData('west')">عصابة الغرب</button>
+            <button class="filter-btn" onclick="filterData('middle')">Middle</button>
+            <button class="filter-btn" onclick="filterData('nwa')">N.W.A</button>
+            <button class="filter-btn" onclick="filterData('crypto')">Crypto</button>
+            <button class="filter-btn" onclick="filterData('yakuza')">الياكوزا</button>
+            <button class="filter-btn" onclick="filterData('oldschool')">Old School</button>
+        </div>
+    </div>
+
     <div id="Streamer-grid">
-        جاري الاتصال بالسيرفر... 📡
+        <div class="loading">جاري جلب حالة الستريمرز...</div>
     </div>
 
     <script type="module" src="main.js"></script>
-
 </body>
 </html>
 
