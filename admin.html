@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - Respect Admin</title>
+    <style>
+        body { background-color: #0b0e11; color: white; font-family: 'Cairo', sans-serif; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        input, select, button { width: 100%; padding: 10px; margin: 10px 0; border-radius: 8px; border: none; }
+        input, select { background: #1a1d21; color: white; border: 1px solid #333; }
+        button { background: #53fc18; color: black; font-weight: bold; cursor: pointer; }
+        button:hover { background: #8a2be2; color: white; }
+        .streamer-item { background: #14171a; padding: 10px; margin-bottom: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333; }
+        .delete-btn { background: #ff3333; color: white; width: auto; padding: 5px 15px; }
+        h2 { border-bottom: 2px solid #53fc18; padding-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>👑 إضافة ستريمر جديد</h2>
+    <input type="text" id="sName" placeholder="الاسم الظاهر (مثال: S5B)">
+    <input type="text" id="sUsername" placeholder="يوزر كيك (مثال: s5b)">
+    <input type="text" id="sIcName" placeholder="اسم الشخصية (مثال: ماثيو)">
+    <input type="text" id="sImage" placeholder="رابط الصورة الشخصية">
+    <select id="sCategory">
+        <option value="police">الشرطة</option>
+        <option value="gangs">عصابات</option>
+        <option value="citizen">مواطن</option>
+        <option value="s.ops">قوات خاصة</option>
+        <option value="admin">إدارة</option>
+    </select>
+    <button onclick="addStreamer()">➕ إضافة للقائمة</button>
+
+    <h2>📋 القائمة الحالية</h2>
+    <div id="listArea">جاري التحميل...</div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    // 🔴🔴 ألصق كود الـ Firebase Config هنا (استبدل هذا الجزء بالكود اللي نسخته) 🔴🔴
+    const firebaseConfig = {
+        apiKey: "AIzaSyBjEc-wdY6s6v0AiVg4texFrohLwDcdaiU",
+        authDomain: "respect-db-d1320.firebaseapp.com",
+        projectId: "respect-db",
+        storageBucket: "respect-db-d1320.firebasestorage.app",
+        messagingSenderId: "823436634480",
+        appId: "1:823436634480:web:3380974cce87d8e82b07b5"
+    };
+    // 🔴🔴 نهاية منطقة اللصق 🔴🔴
+
+    // تهيئة Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const dbCollection = collection(db, "streamers");
+
+    // إضافة ستريمر
+    window.addStreamer = async () => {
+        const name = document.getElementById('sName').value;
+        const username = document.getElementById('sUsername').value;
+        const icName = document.getElementById('sIcName').value;
+        const image = document.getElementById('sImage').value;
+        const category = document.getElementById('sCategory').value;
+
+        if(!username) return alert("اليوزر مطلوب!");
+
+        try {
+            await addDoc(dbCollection, {
+                name, username, icName, image, category
+            });
+            alert("تمت الإضافة بنجاح! ✅");
+            location.reload();
+        } catch (e) {
+            alert("خطأ: " + e.message);
+        }
+    }
+
+    // جلب القائمة
+    async function loadStreamers() {
+        const querySnapshot = await getDocs(dbCollection);
+        const listArea = document.getElementById('listArea');
+        listArea.innerHTML = "";
+        
+        querySnapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            listArea.innerHTML += `
+                <div class="streamer-item">
+                    <div>
+                        <strong>${data.name}</strong> (${data.username})<br>
+                        <small>${data.category}</small>
+                    </div>
+                    <button class="delete-btn" onclick="deleteStreamer('${docSnap.id}')">حذف 🗑️</button>
+                </div>
+            `;
+        });
+    }
+
+    // حذف ستريمر
+    window.deleteStreamer = async (id) => {
+        if(confirm("متاكد تبي تحذفه؟")) {
+            await deleteDoc(doc(db, "streamers", id));
+            location.reload();
+        }
+    }
+
+    loadStreamers();
+</script>
+
+</body>
+</html>
+
