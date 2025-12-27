@@ -14,7 +14,26 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // ==========================================
-// منطق الموقع الأساسي
+// 1. نظام الحماية (Anti-Inspector) 🛡️🚫
+// ==========================================
+document.addEventListener('contextmenu', event => event.preventDefault()); // منع الزر الأيمن
+
+document.onkeydown = function(e) {
+    // F12
+    if(e.keyCode == 123) { return false; }
+    
+    // Ctrl+Shift+I (فتح المطور)
+    if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) { return false; }
+    
+    // Ctrl+Shift+J (فتح الكونسول)
+    if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) { return false; }
+    
+    // Ctrl+U (عرض المصدر)
+    if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) { return false; }
+}
+
+// ==========================================
+// 2. منطق الموقع الأساسي
 // ==========================================
 
 let allStreamers = [];
@@ -32,15 +51,12 @@ const categoryNames = {
     'nwa': 'N.W.A', 'crypto': 'Crypto', 'yakuza': 'الياكوزا', 'oldschool': 'Old School'
 };
 
-// رابط الشعار الجديد لاستخدامه في صفحة الصيانة
 const maintenanceLogo = "https://cdn.discordapp.com/attachments/1436149485167185940/1454355201539702905/logo.png?ex=6950c954&is=694f77d4&hm=6f5fd0f1197cc84ffc9d2e18f97efba791ef75b01f7da85a79702ae22778b0b8&";
 
-// دالة التحقق من الصيانة (تم تطويرها)
 async function checkMaintenance() {
     try {
         const docSnap = await getDoc(doc(db, "settings", "config"));
         if (docSnap.exists() && docSnap.data().maintenance === true) {
-            // تصميم صفحة الصيانة الجديدة
             document.body.innerHTML = `
                 <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; background:#0b0e11; color:white; text-align:center; padding:20px;">
                     <img src="${maintenanceLogo}" alt="Logo" style="width:120px; margin-bottom:30px; border-radius:50%; box-shadow: 0 0 25px rgba(0, 255, 136, 0.2);">
@@ -55,7 +71,6 @@ async function checkMaintenance() {
                     </a>
                 </div>
             `;
-            // إضافة تأثير حركي بسيط للزر عند التحويم
             const btn = document.querySelector('a[href*="x.com"]');
             if(btn){
                 btn.onmouseover = () => btn.style.transform = 'translateY(-3px)';
@@ -63,9 +78,7 @@ async function checkMaintenance() {
             }
             return true;
         }
-    } catch(e) {
-        console.error("Error checking maintenance:", e);
-    }
+    } catch(e) {}
     return false;
 }
 
@@ -83,7 +96,7 @@ window.closeModal = () => {
 
 async function fetchStreamers() {
     const isMaint = await checkMaintenance();
-    if(isMaint) return; // إذا كان تحت الصيانة، توقف هنا
+    if(isMaint) return;
     window.checkModal();
 
     const container = document.getElementById('Streamer-grid');
