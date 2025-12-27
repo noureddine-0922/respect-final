@@ -21,7 +21,7 @@ window.subscribeUser = async () => {
         const permission = await Notification.requestPermission();
         if (permission === 'granted') {
             // 🔴🔴🔴 ضع المفتاح الطويل الذي يبدأ بحرف B هنا 🔴🔴🔴
-      const vapidKey = "BDixhVEmvt_z5kUNrT6OYShBYOdsRo-EOrg976iSjmDFgAYzmOuOFNFQFmWlVAYBefR3gKyQa8kQ-YcLwzYeYRw";
+        const vapidKey = "BDixhVEmvt_z5kUNrT6OYShBYOdsRo-EOrg976iSjmDFgAYzmOuOFNFQFmWlVAYBefR3gKyQa8kQ-YcLwzYeYRw";
 
 
             const token = await getToken(messaging, { vapidKey: vapidKey });

@@ -4,7 +4,7 @@ importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-comp
 firebase.initializeApp({
     apiKey: "AIzaSyBjEc-wdY6s6v0AiVg4texFrohLwDcdaiU",
     authDomain: "respect-db-d1320.firebaseapp.com",
-    projectId: "respect-db-d1320", 
+    projectId: "respect-db-d1320",
     storageBucket: "respect-db-d1320.firebasestorage.app",
     messagingSenderId: "823436634480",
     appId: "1:823436634480:web:3380974cce87d8e82b07b5"
@@ -13,32 +13,12 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
-  console.log('رسالة خلفية:', payload);
+  console.log('رسالة في الخلفية:', payload);
   const notificationTitle = payload.notification.title;
   const notificationOptions = {
     body: payload.notification.body,
     icon: 'https://cdn.discordapp.com/attachments/1436149485167185940/1454355201539702905/logo.png'
   };
   self.registration.showNotification(notificationTitle, notificationOptions);
-});
-
-// الكاش الجديد (v6)
-const CACHE_NAME = 'respect-streams-v6';
-const ASSETS = ['/', '/style.css', '/main.js', '/manifest.json'];
-
-self.addEventListener('install', (e) => {
-  self.skipWaiting();
-  e.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
-});
-
-self.addEventListener('activate', (e) => {
-  e.waitUntil(caches.keys().then((keyList) => Promise.all(keyList.map((key) => {
-      if (key !== CACHE_NAME) return caches.delete(key);
-  }))));
-  return self.clients.claim();
-});
-
-self.addEventListener('fetch', (e) => {
-  e.respondWith(caches.match(e.request).then((res) => res || fetch(e.request)));
 });
 
