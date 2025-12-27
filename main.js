@@ -19,7 +19,7 @@ const db = getFirestore(app);
 
 // دالة لجلب الستريمرز من قاعدة البيانات
 async function fetchStreamers() {
-    const container = document.getElementById('cards-container'); // تأكد أن هذا هو اسم الـ ID في ملف html
+    const container = document.getElementById('Streamer-grid'); // تأكد أن هذا هو اسم الـ ID في ملف html
     
     // إظهار علامة تحميل
     container.innerHTML = '<div style="color:white; text-align:center;">جاري جلب الستريمرز من السيرفر... 📡</div>';
