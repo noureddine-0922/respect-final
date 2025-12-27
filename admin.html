@@ -4,11 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة التحكم - Respect Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body { background-color: #0b0e11; color: white; font-family: 'Cairo', sans-serif; padding: 20px; margin: 0; }
         
-        /* تنسيق شاشة الدخول */
+        /* شاشة الدخول */
         #loginScreen {
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             height: 100vh; position: fixed; top: 0; left: 0; width: 100%;
@@ -21,7 +22,16 @@
         }
         .login-box h2 { margin-top: 0; color: #53fc18; }
         
-        /* تنسيق لوحة التحكم */
+        /* أزرار الدخول */
+        .google-btn {
+            background: white; color: #333; font-weight: bold;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            margin-bottom: 20px; transition: 0.3s;
+        }
+        .google-btn:hover { background: #f1f1f1; transform: scale(1.02); }
+        .divider { margin: 20px 0; color: #888; font-size: 0.9rem; }
+
+        /* لوحة التحكم */
         #dashboard { display: none; max-width: 600px; margin: 0 auto; }
         
         input, select, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; font-family: 'Cairo'; box-sizing: border-box; }
@@ -43,15 +53,25 @@
     <div id="loginScreen">
         <div class="login-box">
             <h2>🔐 دخول الأدمن</h2>
+            
+            <button class="google-btn" onclick="loginGoogle()">
+                <i class="fa-brands fa-google" style="color:#DB4437;"></i> تسجيل الدخول عبر Google
+            </button>
+
+            <div class="divider">أو عبر الإيميل</div>
+
             <input type="email" id="emailInput" placeholder="البريد الإلكتروني">
             <input type="password" id="passInput" placeholder="كلمة المرور">
-            <button onclick="login()">دخول</button>
+            <button onclick="loginEmail()">دخول</button>
             <p id="loginError" style="color:red; display:none;">خطأ في المعلومات!</p>
         </div>
     </div>
 
     <div id="dashboard">
-        <button class="logout-btn" onclick="logout()">🚪 تسجيل خروج</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h3 style="margin:0;">أهلاً, <span id="adminName" style="color:#53fc18">Admin</span></h3>
+            <button class="logout-btn" onclick="logout()" style="width:auto; margin:0;">🚪 خروج</button>
+        </div>
         
         <div class="container">
             <h2>👑 إضافة ستريمر جديد</h2>
@@ -94,8 +114,8 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    // استدعاء مكتبة التوثيق (Auth)
-    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    // ✅ استدعاء Google Auth
+    import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     // 🔴🔴 ألصق كود الـ Firebase Config حقك هنا 🔴🔴
     const firebaseConfig = {
@@ -110,53 +130,50 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
+    const provider = new GoogleAuthProvider(); // إعداد مزود جوجل
     const dbCollection = collection(db, "streamers");
 
-    // --- نظام الحماية والتوثيق ---
-    
-    // مراقبة حالة الدخول (تشتغل تلقائي أول ما تفتح الصفحة)
+    // مراقبة حالة الدخول
     onAuthStateChanged(auth, (user) => {
         if (user) {
-            // إذا كان مسجل دخول -> اخفِ شاشة الدخول واظهر اللوحة
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('dashboard').style.display = 'block';
-            loadStreamers(); // حمل البيانات فقط إذا سجل دخول
+            document.getElementById('adminName').innerText = user.displayName || user.email; // عرض الاسم
+            loadStreamers();
         } else {
-            // إذا غير مسجل -> اظهر شاشة الدخول واخفِ اللوحة
             document.getElementById('loginScreen').style.display = 'flex';
             document.getElementById('dashboard').style.display = 'none';
         }
     });
 
-    // دالة تسجيل الدخول
-    window.login = () => {
-        const email = document.getElementById('emailInput').value;
-        const pass = document.getElementById('passInput').value;
-        const errorMsg = document.getElementById('loginError');
-
-        signInWithEmailAndPassword(auth, email, pass)
-            .then(() => {
-                errorMsg.style.display = 'none';
-                // onAuthStateChanged راح تتصرف وتفتح الصفحة
-            })
-            .catch((error) => {
-                console.error(error);
-                errorMsg.style.display = 'block';
-                errorMsg.innerText = "خطأ: تأكد من الإيميل أو الباسورد";
+    // 🟢 دالة الدخول بجوجل
+    window.loginGoogle = () => {
+        signInWithPopup(auth, provider)
+            .then((result) => {
+                // تم الدخول بنجاح
+            }).catch((error) => {
+                alert("خطأ في تسجيل الدخول: " + error.message);
             });
     }
 
-    // دالة تسجيل الخروج
-    window.logout = () => {
-        if(confirm("هل تريد تسجيل الخروج؟")) {
-            signOut(auth).then(() => {
-                location.reload();
+    // دالة الدخول بالإيميل (القديمة)
+    window.loginEmail = () => {
+        const email = document.getElementById('emailInput').value;
+        const pass = document.getElementById('passInput').value;
+        signInWithEmailAndPassword(auth, email, pass)
+            .catch((error) => {
+                document.getElementById('loginError').style.display = 'block';
+                document.getElementById('loginError').innerText = "خطأ: " + error.message;
             });
+    }
+
+    window.logout = () => {
+        if(confirm("تسجيل خروج؟")) {
+            signOut(auth).then(() => location.reload());
         }
     }
 
-    // --- دوال الأدمن (نفس القديمة) ---
-
+    // --- دوال قاعدة البيانات (نفس السابق) ---
     const catMap = {
         'police': 'الشرطة', 'ems': 'الإسعاف', 'justice': 'العدل', 's.ops': 'قوات خاصة',
         'citizen': 'مواطن', 'plus': 'البلس', 'brazil': 'البرازيليين', 'east': 'الشرق',
@@ -170,13 +187,11 @@
         const icName = document.getElementById('sIcName').value;
         const image = document.getElementById('sImage').value;
         const category = document.getElementById('sCategory').value;
-
         if(!username) return alert("اليوزر مطلوب!");
 
         try {
             await addDoc(dbCollection, { name, username, icName, image, category });
             alert("تمت الإضافة! ✅");
-            // تفريغ الحقول
             document.getElementById('sName').value = '';
             document.getElementById('sUsername').value = '';
             document.getElementById('sIcName').value = '';
@@ -205,17 +220,11 @@
                     </div>
                 `;
             });
-        } catch(e) {
-            console.error(e);
-            listArea.innerHTML = "حدث خطأ في جلب البيانات (تأكد أنك مسجل دخول)";
-        }
+        } catch(e) { console.error(e); }
     }
 
     window.deleteStreamer = async (id) => {
-        if(confirm("متاكد تبي تحذف؟")) {
-            await deleteDoc(doc(db, "streamers", id));
-            loadStreamers();
-        }
+        if(confirm("حذف؟")) { await deleteDoc(doc(db, "streamers", id)); loadStreamers(); }
     }
 </script>
 </body>
