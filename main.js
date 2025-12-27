@@ -15,16 +15,20 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const messaging = getMessaging(app);
 
-// --- دالة الاشتراك في الإشعارات ---
+// --- دالة الاشتراك المعدلة ---
 window.subscribeUser = async () => {
     try {
+        console.log("جاري طلب الإذن...");
         const permission = await Notification.requestPermission();
+        
         if (permission === 'granted') {
-            // 🔴🔴🔴 ضع المفتاح الطويل الذي يبدأ بحرف B هنا 🔴🔴🔴
-        const vapidKey = "BDixhVEmvt_z5kUNrT6OYShBYOdsRo-EOrg976iSjmDFgAYzmOuOFNFQFmWlVAYBefR3gKyQa8kQ-YcLwzYeYRw";
+            console.log("الإذن مقبول، جاري جلب التوكن...");
+            
+            // المفتاح مكتوب مباشرة هنا لضمان صحته
+            const token = await getToken(messaging, { 
+                vapidKey: "BDixhVEmvt_z5kUNrT6OYShBYOdsRo-EOrg976iSjmDFgAYzmOuOFNFQFmWlVAYBefR3gKyQa8kQ-YcLwzYeYRw" 
+            });
 
-
-            const token = await getToken(messaging, { vapidKey: vapidKey });
             if (token) {
                 console.log("Token:", token);
                 await addDoc(collection(db, "subscribers"), { token: token, date: new Date() });
@@ -34,12 +38,11 @@ window.subscribeUser = async () => {
                 alert("❌ لم يتم العثور على توكن.");
             }
         } else {
-            alert("⚠️ يجب السماح بالإشعارات من إعدادات المتصفح.");
+            alert("⚠️ يجب السماح بالإشعارات أولاً.");
         }
     } catch (err) {
-        console.error(err);
-        // هذا السطر بيعلمنا وش المشكلة بالضبط
-        alert("❌ خطأ: " + err.message);
+        console.error("خطأ كامل:", err);
+        alert("❌ خطأ في الاشتراك:\n" + err.code + "\n" + err.message);
     }
 }
 
