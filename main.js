@@ -1,8 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, getDoc, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js";
+import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// إعدادات فايربيس
+// إعدادات فايربيس (كما هي)
 const firebaseConfig = {
     apiKey: "AIzaSyBjEc-wdY6s6v0AiVg4texFrohLwDcdaiU",
     authDomain: "respect-db-d1320.firebaseapp.com",
@@ -14,75 +13,11 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const messaging = getMessaging(app);
-
-// مفتاح VAPID الصحيح مع إزالة الفراغات
-const vapidKey = "BDixhVEmvt_z5kUNrT6OYShBYOdsRo-EOrg976iSjmDFgAYzmOuOFNFQFmWlVAYBefR3gKyQa8kQ-YcLwzYeYRw".trim();
 
 // ==========================================
-// 1. نظام الإشعارات (الحل النهائي)
+// منطق الموقع الأساسي (عرض الستريمرز)
 // ==========================================
-window.subscribeUser = async () => {
-    try {
-        console.log("1. طلب الإذن...");
-        const permission = await Notification.requestPermission();
-        
-        if (permission === 'granted') {
-            console.log("2. الإذن مقبول. تسجيل السيرفر وركر...");
-            
-            // تسجيل السيرفر وركر يدوياً لضمان العمل
-            const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-            await navigator.serviceWorker.ready;
 
-            console.log("3. السيرفر جاهز. جلب التوكن...");
-            const token = await getToken(messaging, { 
-                vapidKey: vapidKey,
-                serviceWorkerRegistration: registration 
-            });
-
-            if (token) {
-                console.log("Token:", token);
-                await addDoc(collection(db, "subscribers"), { token: token, date: new Date() });
-                alert("✅ تم تفعيل التنبيهات بنجاح!");
-                document.getElementById('notifBtn').classList.add('subscribed');
-                document.getElementById('notifBtn').style.color = "#4CAF50";
-            } else {
-                alert("❌ لم يتم استلام التوكن.");
-            }
-        } else {
-            alert("⚠️ يجب السماح بالإشعارات من المتصفح.");
-        }
-    } catch (err) {
-        console.error("خطأ الاشتراك:", err);
-        alert("❌ حدث خطأ:\n" + err.message);
-    }
-};
-
-// ==========================================
-// 2. نظام تثبيت التطبيق (PWA Install)
-// ==========================================
-let deferredPrompt;
-const installBtn = document.getElementById('installBtn');
-
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    installBtn.style.display = 'inline-block'; // إظهار الزر
-});
-
-installBtn.addEventListener('click', async () => {
-    if (deferredPrompt) {
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        console.log(`User response: ${outcome}`);
-        deferredPrompt = null;
-        installBtn.style.display = 'none';
-    }
-});
-
-// ==========================================
-// 3. نظام عرض الستريمرز (Logic)
-// ==========================================
 let allStreamers = [];
 let currentCategoryFilter = 'all';
 let currentStatusFilter = 'all';
