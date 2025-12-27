@@ -1,37 +1,44 @@
-const CACHE_NAME = 'respect-streams-v2'; // غيرت الإصدار عشان يحدث الكاش
-const ASSETS = [
-  '/',
-  '/style.css',
-  '/main.js',
-  '/manifest.json'
-];
+importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
 
-// تثبيت التطبيق وتخزين الملفات
-self.addEventListener('install', (e) => {
-  self.skipWaiting(); // فرض التحديث الفوري
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
-  );
+firebase.initializeApp({
+    apiKey: "AIzaSyBjEc-wdY6s6v0AiVg4texFrohLwDcdaiU",
+    authDomain: "respect-db-d1320.firebaseapp.com",
+    projectId: "respect-db-d1320", 
+    storageBucket: "respect-db-d1320.firebasestorage.app",
+    messagingSenderId: "823436634480",
+    appId: "1:823436634480:web:3380974cce87d8e82b07b5"
 });
 
-// تفعيل السيرفر وركر الجديد وحذف القديم
+const messaging = firebase.messaging();
+
+// استقبال الإشعارات في الخلفية
+messaging.onBackgroundMessage((payload) => {
+  const notificationTitle = payload.notification.title;
+  const notificationOptions = {
+    body: payload.notification.body,
+    icon: payload.notification.icon || '/logo.png'
+  };
+  self.registration.showNotification(notificationTitle, notificationOptions);
+});
+
+// PWA Caching
+const CACHE_NAME = 'respect-streams-v4'; // تحديث الإصدار
+const ASSETS = ['/', '/style.css', '/main.js', '/manifest.json'];
+
+self.addEventListener('install', (e) => {
+  self.skipWaiting();
+  e.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
+});
+
 self.addEventListener('activate', (e) => {
-  e.waitUntil(
-    caches.keys().then((keyList) => {
-      return Promise.all(keyList.map((key) => {
-        if (key !== CACHE_NAME) {
-          return caches.delete(key);
-        }
-      }));
-    })
-  );
+  e.waitUntil(caches.keys().then((keyList) => Promise.all(keyList.map((key) => {
+      if (key !== CACHE_NAME) return caches.delete(key);
+  }))));
   return self.clients.claim();
 });
 
-// جلب الملفات من الكاش
 self.addEventListener('fetch', (e) => {
-  e.respondWith(
-    caches.match(e.request).then((response) => response || fetch(e.request))
-  );
+  e.respondWith(caches.match(e.request).then((res) => res || fetch(e.request)));
 });
 
