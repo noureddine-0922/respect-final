@@ -15,18 +15,25 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const messaging = getMessaging(app);
 
-// --- دالة الاشتراك المعدلة ---
+// --- دالة الاشتراك النهائية (المعدلة) ---
 window.subscribeUser = async () => {
     try {
-        console.log("جاري طلب الإذن...");
+        console.log("1. جاري طلب الإذن...");
         const permission = await Notification.requestPermission();
         
         if (permission === 'granted') {
-            console.log("الإذن مقبول، جاري جلب التوكن...");
+            console.log("2. الإذن مقبول، جاري تجهيز السيرفر وركر...");
             
-            // المفتاح مكتوب مباشرة هنا لضمان صحته
+            // ✅ خطوة جديدة: تسجيل السيرفر وركر يدوياً لضمان وجوده
+            const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+            await navigator.serviceWorker.ready; // انتظار حتى يعمل
+
+            console.log("3. السيرفر وركر جاهز، جاري جلب التوكن...");
+
+            // ✅ نمرر الـ registration لفايربيس عشان يعرف يستخدمه
             const token = await getToken(messaging, { 
-                vapidKey: "BDixhVEmvt_z5kUNrT6OYShBYOdsRo-EOrg976iSjmDFgAYzmOuOFNFQFmWlVAYBefR3gKyQa8kQ-YcLwzYeYRw" 
+                vapidKey: "BDixhVEmvt_z5kUNrT6OYShBYOdsRo-EOrg976iSjmDFgAYzmOuOFNFQFmWlVAYBefR3gKyQa8kQ-YcLwzYeYRw",
+                serviceWorkerRegistration: registration 
             });
 
             if (token) {
@@ -42,10 +49,9 @@ window.subscribeUser = async () => {
         }
     } catch (err) {
         console.error("خطأ كامل:", err);
-        alert("❌ خطأ في الاشتراك:\n" + err.code + "\n" + err.message);
+        alert("❌ خطأ:\n" + err.message);
     }
 }
-
 // --- باقي الأكواد الأساسية ---
 let allStreamers = [];
 let currentCategoryFilter = 'all';
