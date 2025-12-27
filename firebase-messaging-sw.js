@@ -12,7 +12,6 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// معالج الرسائل في الخلفية
 messaging.onBackgroundMessage((payload) => {
   console.log('رسالة خلفية:', payload);
   const notificationTitle = payload.notification.title;
@@ -23,9 +22,9 @@ messaging.onBackgroundMessage((payload) => {
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-// الكاش الجديد (v5)
-const CACHE_NAME = 'respect-streams-v5';
-const ASSETS = ['/', '/index.html', '/style.css', '/main.js', '/manifest.json'];
+// الكاش الجديد (v6)
+const CACHE_NAME = 'respect-streams-v6';
+const ASSETS = ['/', '/style.css', '/main.js', '/manifest.json'];
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();
