@@ -1,6 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+// إعدادات Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyBjEc-wdY6s6v0AiVg4texFrohLwDcdaiU",
     authDomain: "respect-db-d1320.firebaseapp.com",
@@ -12,93 +13,115 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-
 let allStreamers = [];
-const container = document.getElementById('streamers-container');
 
-const categoryNames = {
-    'police': '<i class="fa-solid fa-handcuffs"></i> الشرطة',
-    'ems': '<i class="fa-solid fa-truck-medical"></i> الإسعاف',
-    'justice': '<i class="fa-solid fa-scale-balanced"></i> العدل',
-    'criminal': '<i class="fa-solid fa-user-ninja"></i> مجرم',
-    'obeid': 'عائلة عبيد',
-    'plus': 'عصابة البلس',
-    'brazil': 'البرازيليين',
-    'east': 'عصابة الشرق',
-    'west': 'عصابة الغرب',
-    'middle': 'Middle Gang',
-    'nwa': 'N.W.A',
-    'crypto': 'Crypto',
-    'yakuza': 'الياكوزا',
-    'oldschool': 'Old School'
-};
-
-async function checkMaintenance() {
+// دالة جلب حالة البث من Kick (مع استخدام بروكزي لتجنب CORS)
+async function getKickStatus(username) {
     try {
-        const mDoc = await getDoc(doc(db, "settings", "config"));
-        if (mDoc.exists() && mDoc.data().maintenance === true) {
-            document.body.innerHTML = `<div style="display:flex;flex-direction:column;justify-content:center;align-items:center;height:100vh;background:#0d1117;color:white;text-align:center;font-family:'Cairo'"><i class="fa-solid fa-screwdriver-wrench" style="font-size:4rem;color:#00ff88;margin-bottom:20px;"></i><h1>الموقع تحت الصيانة</h1></div>`;
-            return true;
-        }
-    } catch (e) { console.log("Maint check skipped"); }
-    return false;
+        const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://kick.com/api/v1/channels/' + username)}`);
+        const json = await response.json();
+        const data = JSON.parse(json.contents);
+        
+        return {
+            isLive: data.livestream !== null,
+            viewers: data.livestream ? data.livestream.viewer_count : 0,
+            thumbnail: data.livestream ? data.livestream.thumbnail.url : null,
+            pfp: data.user.profile_pic
+        };
+    } catch (e) {
+        console.error("Error fetching Kick status for:", username);
+        return { isLive: false, viewers: 0, thumbnail: null, pfp: null };
+    }
 }
 
+// دالة جلب البيانات الأساسية من Firebase وتحديث الحالات
+async function loadData() {
+    const container = document.getElementById('streamers-container');
+    try {
+        const querySnapshot = await getDocs(collection(db, "streamers"));
+        const rawData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        // جلب حالة البث لكل ستريمر بالتوازي لتسريع العملية
+        allStreamers = await Promise.all(rawData.map(async (s) => {
+            const status = await getKickStatus(s.username);
+            return { ...s, ...status };
+        }));
+
+        // الترتيب: المباشر أولاً، ثم حسب عدد المشاهدين
+        allStreamers.sort((a, b) => {
+            if (a.isLive === b.isLive) return b.viewers - a.viewers;
+            return b.isLive - a.isLive;
+        });
+
+        updateStats();
+        renderStreamers(allStreamers);
+    } catch (error) {
+        console.error("Error loading data:", error);
+        container.innerHTML = `<p style="color:red; text-align:center; grid-column:1/-1;">حدث خطأ أثناء جلب البيانات.</p>`;
+    }
+}
+
+// تحديث عداد الإحصائيات في الهيدر
+function updateStats() {
+    const total = allStreamers.length;
+    const live = allStreamers.filter(s => s.isLive).length;
+    const viewers = allStreamers.reduce((acc, s) => acc + s.viewers, 0);
+
+    document.getElementById('total-streamers').innerText = total;
+    document.getElementById('live-count').innerText = live;
+    document.getElementById('total-viewers').innerText = viewers;
+}
+
+// دالة عرض البطاقات (3 في كل صف كما هو محدد في CSS)
 function renderStreamers(list) {
-    if(!container) return;
+    const container = document.getElementById('streamers-container');
     container.innerHTML = '';
+
     if (list.length === 0) {
-        container.innerHTML = '<p style="color:#888;text-align:center;grid-column:1/-1;padding:50px;">لا توجد بيانات حالياً.</p>';
+        container.innerHTML = '<p style="color:#888; text-align:center; grid-column:1/-1; padding:50px;">لا توجد نتائج مطابقة.</p>';
         return;
     }
+
     list.forEach(s => {
-        const catLabel = categoryNames[s.category] || s.category;
         const card = document.createElement('div');
-        card.className = 'card';
+        card.className = `card ${s.isLive ? 'border-live' : ''}`;
         card.innerHTML = `
-            <div class="flip-wrapper">
-                <div class="card-inner">
-                    <div class="card-front">
-                        <div class="status-badge offline">OFFLINE</div>
-                        <img src="${s.image || ''}" class="pfp" onerror="this.src='https://via.placeholder.com/150'">
-                        <div class="info">
-                            <h3>${s.name}</h3>
-                            <p><i class="fa-solid fa-id-card"></i> ${s.icName || '---'}</p>
-                            <span class="category-tag">${catLabel}</span>
-                        </div>
-                    </div>
-                    <div class="card-back">
-                        <h3>${s.name}</h3>
-                        <a href="https://kick.com/${s.username}" target="_blank" class="watch-btn">مشاهدة</a>
-                    </div>
-                </div>
-            </div>`;
+            <div class="status-tag ${s.isLive ? 'bg-live' : 'bg-off'}">
+                ${s.isLive ? `<i class="fa-solid fa-tower-broadcast"></i> مباشر | ${s.viewers}` : 'غير متصل'}
+            </div>
+            <img src="${s.pfp || s.image || 'https://via.placeholder.com/150'}" class="pfp">
+            <div class="info">
+                <h3>${s.name}</h3>
+                <p><i class="fa-solid fa-id-card"></i> ${s.icName || '---'}</p>
+            </div>
+            <a href="https://kick.com/${s.username}" target="_blank" class="kick-link">
+                ${s.isLive ? 'مشاهدة الآن' : 'انتقال للقناة'}
+            </a>
+        `;
         container.appendChild(card);
     });
 }
 
-async function startApp() {
-    const isM = await checkMaintenance();
-    if (isM) return;
-    try {
-        const snap = await getDocs(collection(db, "streamers"));
-        allStreamers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        renderStreamers(allStreamers);
-    } catch (e) { console.error(e); }
-}
-
-// ربط الفلترة بالنافذة العامة
-window.appFilter = (category) => {
-    const filtered = (category === 'all') ? allStreamers : allStreamers.filter(s => s.category === category);
-    renderStreamers(filtered);
-};
-
 // نظام البحث
 document.getElementById('searchInput')?.addEventListener('input', (e) => {
     const term = e.target.value.toLowerCase();
-    const filtered = allStreamers.filter(s => s.name.toLowerCase().includes(term) || (s.icName && s.icName.toLowerCase().includes(term)));
+    const filtered = allStreamers.filter(s => 
+        s.name.toLowerCase().includes(term) || 
+        (s.icName && s.icName.toLowerCase().includes(term))
+    );
     renderStreamers(filtered);
 });
 
-startApp();
+// نظام الفلترة (مربوط بالنافذة ليراه index.html)
+window.appFilter = (category) => {
+    if (category === 'all') {
+        renderStreamers(allStreamers);
+    } else {
+        const filtered = allStreamers.filter(s => s.category === category);
+        renderStreamers(filtered);
+    }
+};
+
+// تشغيل التطبيق
+loadData();
 

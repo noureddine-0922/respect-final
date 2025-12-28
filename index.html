@@ -4,42 +4,57 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ريسبكت ستريمرز | Respect Streams</title>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <header>
-        <div class="logo-area">
-            <img src="https://cdn.discordapp.com/attachments/1436149485167185940/1454355201539702905/logo.png?ex=69521ad4&is=6950c954&hm=94cca90d26937393fa24cb79455c334b5e89fde3aa7564ce1e0e82e42e2a62f6&" alt="Logo" width="50">
-            <h1>RESPECT <span style="color:var(--neon-green)">STREAMS</span></h1>
+    <header class="main-header">
+        <img src="https://cdn.discordapp.com/attachments/1436149485167185940/1454355201539702905/logo.png?ex=69521ad4&is=6950c954&hm=94cca90d26937393fa24cb79455c334b5e89fde3aa7564ce1e0e82e42e2a62f6&" alt="Respect Logo" class="top-logo">
+        <h1>ريسبكت ستريمرز</h1>
+        <p>أول منصة تجمع حالة ستريمرز ريسبكت لحظة بلحظة</p>
+        
+        <div class="stats-bar">
+            <div class="stat-item">الستريمرز: <span id="total-streamers">0</span></div>
+            <div class="stat-item">يبث الآن: <span id="live-count" style="color:var(--neon-green)">0</span></div>
+            <div class="stat-item">المشاهدات: <span id="total-viewers">0</span></div>
         </div>
-        <div class="search-box">
-            <i class="fa-solid fa-search"></i>
+
+        <div class="search-container">
+            <i class="fa-solid fa-magnifying-glass"></i>
             <input type="text" id="searchInput" placeholder="ابحث عن ستريمر أو شخصية...">
         </div>
     </header>
 
-    <div class="container" style="display: flex;">
-        <aside class="sidebar">
-            <h3><i class="fa-solid fa-filter"></i> الفئات</h3>
-            <button class="filter-btn active" onclick="filterData('all')"><i class="fa-solid fa-globe"></i> الكل</button>
+    <div class="app-layout">
+        <main class="content-area">
+            <div id="streamers-container" class="grid-3">
+                <div style="text-align:center; width:100%; grid-column: 1/-1; color:white; padding-top: 50px;">
+                    <i class="fa-solid fa-circle-notch fa-spin" style="font-size:2.5rem; color:var(--neon-green);"></i>
+                    <p style="margin-top:15px;">جاري جلب حالات البث المباشر...</p>
+                </div>
+            </div>
+        </main>
+
+        <aside class="right-sidebar">
+            <h3><i class="fa-solid fa-layer-group"></i> الفئات</h3>
+            <button class="filter-btn active" onclick="filterData('all')">
+                <i class="fa-solid fa-globe"></i> الكل
+            </button>
             
-            <div class="filter-group">
-                <h4>جهات حكومية</h4>
+            <div class="side-group">
+                <span>الجهات الحكومية</span>
                 <button class="filter-btn" onclick="filterData('police')">الشرطة</button>
                 <button class="filter-btn" onclick="filterData('ems')">الإسعاف</button>
                 <button class="filter-btn" onclick="filterData('justice')">العدل</button>
             </div>
 
-            <div class="filter-group">
-                <h4>خارج القانون</h4>
+            <div class="side-group">
+                <span>خارج القانون</span>
                 <button class="filter-btn" onclick="filterData('criminal')">مجرم</button>
-            </div>
-
-            <div class="filter-group">
-                <h4>عصابات وعائلات</h4>
                 <button class="filter-btn" onclick="filterData('obeid')">عائلة عبيد</button>
                 <button class="filter-btn" onclick="filterData('plus')">عصابة البلس</button>
                 <button class="filter-btn" onclick="filterData('brazil')">البرازيليين</button>
@@ -52,31 +67,26 @@
                 <button class="filter-btn" onclick="filterData('oldschool')">Old School</button>
             </div>
         </aside>
-
-        <main style="flex: 1; padding: 20px;">
-            <div id="streamers-container" class="grid-container">
-                <div style="text-align:center; width:100%; grid-column: 1/-1; color:white; padding-top: 50px;">
-                    <i class="fa-solid fa-circle-notch fa-spin" style="font-size:2.5rem; color:var(--neon-green);"></i>
-                    <p>جاري تحميل الستريمرز...</p>
-                </div>
-            </div>
-        </main>
     </div>
 
-    <footer>
-        <p>جميع الحقوق محفوظة &copy; 2026 ستريمرز <span style="color:var(--neon-green)">Respect</span></p>
+    <footer class="main-footer">
+        <p>ريسبكت ستريمرز 2026 &copy; جميع الحقوق محفوظة لمجتمع Respect</p>
     </footer>
 
     <script type="module" src="main.js"></script>
 
     <script>
-        // الربط بين الواجهة ومنطق البرمجة
-        window.filterData = (cat) => {
+        window.filterData = (category) => {
             if (window.appFilter) {
-                window.appFilter(cat);
-                // تغيير حالة الزر النشط
-                document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-                event.currentTarget.classList.add('active');
+                window.appFilter(category);
+                
+                // تحديث شكل الزر المختار
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                if (event) {
+                    event.currentTarget.classList.add('active');
+                }
             }
         };
     </script>
