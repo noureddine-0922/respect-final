@@ -18,17 +18,18 @@ let allStreamers = [];
 let refreshSeconds = 30; // توقيت التحديث التلقائي
 
 /**
- * جلب حالة الستريمر من Kick عبر السيرفر الوسيط (Cloudflare Function)
- * لتجنب الحظر ولضمان سرعة التحميل
+ * جلب حالة الستريمر مع إضافة t= لمنع الكاش وضمان الحالة اللحظية
  */
 async function getKickStatus(username) {
     try {
-        const response = await fetch(`/api?user=${username}`);
-        if (!response.ok) throw new Error('Network response was not ok');
+        // إضافة Date.now() تجبر السيرفر على جلب بيانات جديدة دائماً
+        const response = await fetch(`/api?user=${username}&t=${Date.now()}`);
+        if (!response.ok) throw new Error('Network error');
         const data = await response.json();
         
         return {
-            isLive: data.livestream !== null,
+            // التحقق الدقيق: يجب أن يكون livestream موجوداً وحالته is_live حقيقية
+            isLive: data.livestream !== null && data.livestream.is_live === true,
             viewers: data.livestream ? data.livestream.viewer_count : 0,
             pfp: data.user ? data.user.profile_pic : null
         };
@@ -39,24 +40,20 @@ async function getKickStatus(username) {
 }
 
 /**
- * جلب جميع الستريمرز من Firebase وتحديث حالاتهم
+ * جلب البيانات من Firebase وتحديث العرض
  */
 async function loadData() {
     try {
         const querySnapshot = await getDocs(collection(db, "streamers"));
         const rawData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        // جلب البيانات لكل ستريمر بالتوازي لسرعة الأداء
         allStreamers = await Promise.all(rawData.map(async (s) => {
             const status = await getKickStatus(s.username);
             return { ...s, ...status };
         }));
 
-        // الترتيب: المباشر أولاً، ثم حسب عدد المشاهدين
-        allStreamers.sort((a, b) => {
-            if (a.isLive === b.isLive) return b.viewers - a.viewers;
-            return b.isLive - a.isLive;
-        });
+        // الترتيب: البث المباشر أولاً
+        allStreamers.sort((a, b) => (b.isLive - a.isLive) || (b.viewers - a.viewers));
 
         updateStats();
         renderStreamers(allStreamers);
@@ -65,56 +62,31 @@ async function loadData() {
     }
 }
 
-/**
- * تحديث عدادات الإحصائيات في الهيدر
- */
 function updateStats() {
-    const total = allStreamers.length;
-    const liveCount = allStreamers.filter(s => s.isLive).length;
-    const totalViewers = allStreamers.reduce((acc, s) => acc + s.viewers, 0);
-
-    document.getElementById('total-streamers').innerText = total;
-    document.getElementById('live-count').innerText = liveCount;
-    document.getElementById('total-viewers').innerText = totalViewers;
+    document.getElementById('total-streamers').innerText = allStreamers.length;
+    document.getElementById('live-count').innerText = allStreamers.filter(s => s.isLive).length;
+    document.getElementById('total-viewers').innerText = allStreamers.reduce((acc, s) => acc + s.viewers, 0);
 }
 
-/**
- * عرض بطاقات الستريمرز في الحاوية الرئيسية (Grid)
- */
 function renderStreamers(list) {
     const container = document.getElementById('streamers-container');
     if (!container) return;
     
-    container.innerHTML = '';
-
-    if (list.length === 0) {
-        container.innerHTML = '<p style="text-align:center; grid-column:1/-1;">لا توجد نتائج مطابقة لبحثك.</p>';
-        return;
-    }
-
-    list.forEach(s => {
-        const card = document.createElement('div');
-        card.className = `card ${s.isLive ? 'border-live' : ''}`;
-        card.innerHTML = `
+    container.innerHTML = list.map(s => `
+        <div class="card ${s.isLive ? 'border-live' : ''}">
             <div class="status-tag ${s.isLive ? 'bg-live' : 'bg-off'}">
                 ${s.isLive ? `<span class="pulse-dot"></span> مباشر | ${s.viewers}` : 'غير متصل'}
             </div>
-            <img src="${s.pfp || s.image || 'https://via.placeholder.com/150'}" class="pfp" alt="${s.name}">
+            <img src="${s.pfp || s.image || 'https://via.placeholder.com/150'}" class="pfp">
             <div class="info">
                 <h3>${s.name}</h3>
                 <p><i class="fa-solid fa-id-card"></i> ${s.icName || 'بدون اسم'}</p>
             </div>
-            <a href="https://kick.com/${s.username}" target="_blank" class="kick-link">
-                ${s.isLive ? 'مشاهدة البث' : 'قناة الستريمر'}
-            </a>
-        `;
-        container.appendChild(card);
-    });
+            <a href="https://kick.com/${s.username}" target="_blank" class="kick-link">مشاهدة</a>
+        </div>
+    `).join('');
 }
 
-/**
- * نظام التوقيت والعد التنازلي للتحديث التلقائي
- */
 function startCountdown() {
     const timerElement = document.getElementById('refresh-clock');
     setInterval(() => {
@@ -122,33 +94,24 @@ function startCountdown() {
         if (timerElement) timerElement.innerText = refreshSeconds;
         
         if (refreshSeconds <= 0) {
-            refreshSeconds = 30; // إعادة التوقيت
-            loadData(); // تحديث البيانات من السيرفر
+            refreshSeconds = 30;
+            loadData(); // تحديث البيانات تلقائياً
         }
     }, 1000);
 }
 
-// نظام البحث عن الستريمرز
 document.getElementById('searchInput')?.addEventListener('input', (e) => {
     const term = e.target.value.toLowerCase();
     const filtered = allStreamers.filter(s => 
-        s.name.toLowerCase().includes(term) || 
-        (s.icName && s.icName.toLowerCase().includes(term))
+        s.name.toLowerCase().includes(term) || (s.icName && s.icName.toLowerCase().includes(term))
     );
     renderStreamers(filtered);
 });
 
-// نظام الفلترة عبر الفئات
 window.appFilter = (category) => {
-    if (category === 'all') {
-        renderStreamers(allStreamers);
-    } else {
-        const filtered = allStreamers.filter(s => s.category === category);
-        renderStreamers(filtered);
-    }
+    renderStreamers(category === 'all' ? allStreamers : allStreamers.filter(s => s.category === category));
 };
 
-// تشغيل التطبيق عند التحميل
 loadData();
 startCountdown();
 
