@@ -1,181 +1,107 @@
 <!DOCTYPE html>
-
 <html lang="ar" dir="rtl">
-
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ريسبكت ستريمرز | Respect Stremas</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css">
 
-<meta charset="UTF-8">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Respect Streams | ريسبكت ستريمرز</title>
-
-
-
-<meta name="theme-color" content="#0b0e11">
-
-<link rel="icon" type="image/png" href="https://cdn.discordapp.com/attachments/1436149485167185940/1454355201539702905/logo.png?ex=6950c954&is=694f77d4&hm=6f5fd0f1197cc84ffc9d2e18f97efba791ef75b01f7da85a79702ae22778b0b8&">
-
-
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
-
-<link rel="stylesheet" href="style.css">
-
+    <style>
+        /* تنسيقات إضافية للتأكد من ظهور الشبكة بشكل صحيح */
+        .container { display: flex; min-height: 100vh; }
+        main { flex: 1; padding: 20px; }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 25px;
+            padding: 10px;
+        }
+        @media (max-width: 768px) {
+            .container { flex-direction: column; }
+            .sidebar { width: 100%; border-left: none; border-bottom: 1px solid #30363d; }
+        }
+    </style>
 </head>
-
-
-
-<body oncontextmenu="return false">
-
-
-
-<div class="modal-overlay" id="welcomeModal">
-
-<div class="modal-content">
-
-<i class="fa-solid fa-xmark modal-close" onclick="closeModal()"></i>
-
-<img src="https://cdn.discordapp.com/attachments/1436149485167185940/1454355201539702905/logo.png?ex=6950c954&is=694f77d4&hm=6f5fd0f1197cc84ffc9d2e18f97efba791ef75b01f7da85a79702ae22778b0b8&" alt="Logo" class="modal-logo">
-
-<h2 style="color:white; margin:0 0 10px 0;">أهلاً بك في ريسبكت!</h2>
-
-<p style="color:#ccc;">تابع حالة الستريمرز المفضلين لديك لحظة بلحظة.</p>
-
-<a href="https://x.com/streamsrespect" target="_blank" class="modal-btn"><i class="fa-brands fa-x-twitter"></i> تواصل معنا</a>
-
-</div>
-
-</div>
-
-
-
-<header class="main-header">
-
-<img src="https://cdn.discordapp.com/attachments/1436149485167185940/1454355201539702905/logo.png?ex=6950c954&is=694f77d4&hm=6f5fd0f1197cc84ffc9d2e18f97efba791ef75b01f7da85a79702ae22778b0b8&" alt="Logo" class="logo-img">
-
-<h1 class="brand-title">RESPECT STREAMS</h1>
-
-<p class="brand-subtitle">تابع حالة ستريمرز ريسبكت لحظة بلحظة</p>
-
-<div class="loading-bar"></div>
-
-</header>
-
-
-
-<div class="main-container">
-
-<aside class="sidebar">
-
-<h3><i class="fa-solid fa-filter"></i> الفئات</h3>
-
-<button class="filter-btn active" onclick="filterData('all')"><i class="fa-solid fa-globe"></i> الكل</button>
-
-<div class="filter-group">
-
-<h4>جهات حكومية</h4>
-
-<button class="filter-btn" onclick="filterData('police')"><i class="fa-solid fa-handcuffs"></i> الشرطة</button>
-
-<button class="filter-btn" onclick="filterData('ems')"><i class="fa-solid fa-truck-medical"></i> الإسعاف</button>
-
-<button class="filter-btn" onclick="filterData('justice')"><i class="fa-solid fa-scale-balanced"></i> العدل</button>
-
-<button class="filter-btn" onclick="filterData('s.ops')"><i class="fa-solid fa-mask"></i> قوات خاصة</button>
-
-</div>
-
-<div class="filter-group">
-
-<h4>مدنيين</h4>
-
-<button class="filter-btn" onclick="filterData('citizen')"><i class="fa-solid fa-user"></i> مواطن</button>
-
-</div>
-
-<div class="filter-group">
-
-<h4>عصابات وعائلات</h4>
-
-<button class="filter-btn" onclick="filterData('obeid')">عائلة عبيد</button>
-
-<button class="filter-btn" onclick="filterData('plus')">عصابة البلس</button>
-
-<button class="filter-btn" onclick="filterData('brazil')">البرازيليين</button>
-
-<button class="filter-btn" onclick="filterData('east')">عصابة الشرق</button>
-
-<button class="filter-btn" onclick="filterData('west')">عصابة الغرب</button>
-
-<button class="filter-btn" onclick="filterData('middle')">Middle Gang</button>
-
-<button class="filter-btn" onclick="filterData('nwa')">N.W.A</button>
-
-<button class="filter-btn" onclick="filterData('crypto')">Crypto</button>
-
-<button class="filter-btn" onclick="filterData('yakuza')">الياكوزا</button>
-
-<button class="filter-btn" onclick="filterData('oldschool')">Old School</button>
-
-</div>
-
-</aside>
-
-
-
-<section class="content-area">
-
-<div class="stats-bar">
-
-<div class="stat-item"><span class="stat-number" id="totalStreamers">-</span><span class="stat-label">الستريمرز</span></div>
-
-<div class="stat-item"><span class="stat-number" id="liveNow" style="color: var(--neon-green)">0</span><span class="stat-label">بث مباشر</span></div>
-
-<div class="stat-item"><span class="stat-number" id="totalViewersCount" style="color: var(--neon-purple)">0</span><span class="stat-label">مشاهد الآن</span></div>
-
-</div>
-
-<div class="top-controls">
-
-<div class="search-box"><input type="text" id="searchInput" placeholder="ابحث..."><i class="fa-solid fa-search"></i></div>
-
-<div class="status-filters">
-
-<button class="status-btn active all" onclick="filterStatus('all')">الكل</button>
-
-<button class="status-btn live" onclick="filterStatus('live')">🔴 بث مباشر</button>
-
-<button class="status-btn offline" onclick="filterStatus('offline')">غير متصل</button>
-
-</div>
-
-</div>
-
-<div id="Streamer-grid"><div class="loading"><i class="fa-solid fa-satellite-dish fa-spin"></i> جاري الاتصال...</div></div>
-
-</section>
-
-</div>
-
-
-
-<footer class="main-footer">
-
-<p>© 2026 Respect Streams. جميع الحقوق محفوظة.</p>
-
-<div class="footer-social"><a href="https://x.com/streamsrespect" target="_blank"><i class="fa-brands fa-x-twitter"></i></a></div>
-
-</footer>
-
-
-
-<script type="module" src="main.js"></script>
-
+<body>
+
+    <header>
+        <div class="logo-area">
+            <img src="https://cdn.discordapp.com/attachments/1436149485167185940/1454355201539702905/logo.png?ex=69521ad4&is=6950c954&hm=94cca90d26937393fa24cb79455c334b5e89fde3aa7564ce1e0e82e42e2a62f6&" alt="Respect Logo" width="50">
+            <h1>RESPECT <span style="color:var(--neon-green)">STREAMS</span></h1>
+        </div>
+        <div class="search-box">
+            <i class="fa-solid fa-search"></i>
+            <input type="text" id="searchInput" placeholder="ابحث عن ستريمر أو شخصية...">
+        </div>
+    </header>
+
+    <div class="container">
+        <aside class="sidebar">
+            <h3><i class="fa-solid fa-filter"></i> الفئات</h3>
+            <button class="filter-btn active" onclick="filterData('all')">
+                <i class="fa-solid fa-globe"></i> الكل
+            </button>
+            
+            <div class="filter-group">
+                <h4>جهات حكومية</h4>
+                <button class="filter-btn" onclick="filterData('police')"><i class="fa-solid fa-handcuffs"></i> الشرطة</button>
+                <button class="filter-btn" onclick="filterData('ems')"><i class="fa-solid fa-truck-medical"></i> الإسعاف</button>
+                <button class="filter-btn" onclick="filterData('justice')"><i class="fa-solid fa-scale-balanced"></i> العدل</button>
+            </div>
+
+            <div class="filter-group">
+                <h4>خارج القانون</h4>
+                <button class="filter-btn" onclick="filterData('criminal')"><i class="fa-solid fa-user-ninja"></i> مجرم</button>
+            </div>
+
+            <div class="filter-group">
+                <h4>عصابات وعائلات</h4>
+                <button class="filter-btn" onclick="filterData('obeid')">عائلة عبيد</button>
+                <button class="filter-btn" onclick="filterData('plus')">عصابة البلس</button>
+                <button class="filter-btn" onclick="filterData('brazil')">البرازيليين</button>
+                <button class="filter-btn" onclick="filterData('east')">عصابة الشرق</button>
+                <button class="filter-btn" onclick="filterData('west')">عصابة الغرب</button>
+                <button class="filter-btn" onclick="filterData('middle')">Middle Gang</button>
+                <button class="filter-btn" onclick="filterData('nwa')">N.W.A</button>
+                <button class="filter-btn" onclick="filterData('crypto')">Crypto</button>
+                <button class="filter-btn" onclick="filterData('yakuza')">الياكوزا</button>
+                <button class="filter-btn" onclick="filterData('oldschool')">Old School</button>
+            </div>
+        </aside>
+
+        <main>
+            <div id="streamers-container" class="grid-container">
+                <div id="loading-spinner" style="text-align:center; width:100%; grid-column: 1/-1; color:white; padding-top: 50px;">
+                    <i class="fa-solid fa-circle-notch fa-spin" style="font-size:2.5rem; color:var(--neon-green);"></i>
+                    <p style="margin-top:15px; font-weight:600;">جاري جلب الستريمرز...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <footer>
+        <p>جميع الحقوق محفوظة &copy; 2024 لمجتمع <span style="color:var(--neon-green)">Respect</span></p>
+    </footer>
+
+    <script type="module" src="main.js"></script>
+
+    <script>
+        window.filterData = (category) => {
+            if (window.appFilter) {
+                window.appFilter(category);
+                
+                // تحديث تأثير الزر النشط (Active)
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                event.currentTarget.classList.add('active');
+            }
+        };
+    </script>
 </body>
-
 </html>
-
 
