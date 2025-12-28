@@ -14,60 +14,61 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 let allStreamers = [];
 
-// جلب الحالة بأسرع طريقة ممكنة عبر Cloudflare
+// وظيفة جلب الحالة (معدلة لتكون أسرع ما يمكن)
 async function fetchStatus(streamer) {
     try {
+        // إضافة t=Date.now تمنع الكاش نهائياً
         const response = await fetch(`/api?user=${streamer.username}&t=${Date.now()}`);
         const data = await response.json();
+        
         const status = {
             isLive: data.livestream?.is_live === true,
             viewers: data.livestream?.viewer_count || 0,
             pfp: data.user?.profile_pic || null
         };
-        
-        // تحديث المصفوفة والواجهة فوراً لهذا الستريمر فقط
-        const index = allStreamers.findIndex(s => s.username === streamer.username);
-        if (index !== -1) {
-            allStreamers[index] = { ...allStreamers[index], ...status };
-            updateUI(); 
+
+        const idx = allStreamers.findIndex(s => s.username === streamer.username);
+        if (idx !== -1) {
+            allStreamers[idx] = { ...allStreamers[idx], ...status };
+            // تحديث الواجهة فوراً بمجرد وصول بيانات هذا الستريمر
+            refreshUI();
         }
     } catch (e) {
-        console.error("Error fetching:", streamer.username);
+        console.error("Fetch Error:", streamer.username);
     }
 }
 
 async function loadData() {
     try {
-        // 1. جلب البيانات من Firebase (مرة واحدة فقط عند فتح الصفحة)
+        // إذا كانت القائمة فارغة (أول مرة)، نجلبها من Firebase
         if (allStreamers.length === 0) {
-            const querySnapshot = await getDocs(collection(db, "streamers"));
-            allStreamers = querySnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-                isLive: false,
-                viewers: 0
-            }));
-            renderStreamers(allStreamers); // عرض البطاقات فوراً (حتى لو offline)
+            const snap = await getDocs(collection(db, "streamers"));
+            allStreamers = snap.docs.map(doc => ({ id: doc.id, ...doc.data(), isLive: false, viewers: 0 }));
+            refreshUI(); // عرض البطاقات فوراً
         }
 
-        // 2. تحديث الحالات "بالتوازي" (Parallel Fetching)
-        // سنطلق جميع الطلبات في نفس اللحظة!
-        const fetchPromises = allStreamers.map(streamer => fetchStatus(streamer));
+        // إطلاق جميع الطلبات "بالتوازي" فوراً
+        // Promise.all تجعل الطلبات تنطلق معاً كطلقة واحدة
+        await Promise.all(allStreamers.map(s => fetchStatus(s)));
         
-        // لا ننتظر هنا، الطلبات تعمل في الخلفية وكل واحد يصل يحدث نفسه
-    } catch (error) {
-        console.error("Initial load error:", error);
+    } catch (err) {
+        console.error("Load Error:", err);
     }
 }
 
-function updateUI() {
-    // الترتيب: المباشر أولاً ثم الأكثر مشاهدة
+function refreshUI() {
+    // ترتيب ذكي: البث المباشر في الأعلى دائماً
     allStreamers.sort((a, b) => (b.isLive - a.isLive) || (b.viewers - a.viewers));
-    renderStreamers(allStreamers);
-    updateStats();
+    renderCards(allStreamers);
+    
+    // تحديث الأرقام في الهيدر
+    const live = allStreamers.filter(s => s.isLive);
+    document.getElementById('total-streamers').innerText = allStreamers.length;
+    document.getElementById('live-count').innerText = live.length;
+    document.getElementById('total-viewers').innerText = live.reduce((a, b) => a + b.viewers, 0);
 }
 
-function renderStreamers(list) {
+function renderCards(list) {
     const container = document.getElementById('streamers-container');
     if (!container) return;
     container.innerHTML = list.map(s => `
@@ -83,18 +84,7 @@ function renderStreamers(list) {
     `).join('');
 }
 
-function updateStats() {
-    const liveItems = allStreamers.filter(s => s.isLive);
-    document.getElementById('total-streamers').innerText = allStreamers.length;
-    document.getElementById('live-count').innerText = liveItems.length;
-    document.getElementById('total-viewers').innerText = liveItems.reduce((acc, s) => acc + s.viewers, 0);
-}
-
-// تحديث ذكي كل 15 ثانية بدلاً من 30
-function startSmartUpdate() {
-    loadData(); // أول جلب عند فتح الصفحة
-    setInterval(loadData, 15000); // تحديث كل 15 ثانية
-}
-
-startSmartUpdate();
+// تشغيل النظام: جلب فوري ثم تحديث كل 20 ثانية
+loadData(); 
+setInterval(loadData, 20000); 
 
