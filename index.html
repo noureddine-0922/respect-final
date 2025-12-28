@@ -3,34 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ريسبكت ستريمرز | Respect Stremas</title>
-    
+    <title>ريسبكت ستريمرز | Respect Streams</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
-    
     <link rel="stylesheet" href="style.css">
-
-    <style>
-        /* تنسيقات إضافية للتأكد من ظهور الشبكة بشكل صحيح */
-        .container { display: flex; min-height: 100vh; }
-        main { flex: 1; padding: 20px; }
-        .grid-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 25px;
-            padding: 10px;
-        }
-        @media (max-width: 768px) {
-            .container { flex-direction: column; }
-            .sidebar { width: 100%; border-left: none; border-bottom: 1px solid #30363d; }
-        }
-    </style>
 </head>
 <body>
 
     <header>
         <div class="logo-area">
-            <img src="https://cdn.discordapp.com/attachments/1436149485167185940/1454355201539702905/logo.png?ex=69521ad4&is=6950c954&hm=94cca90d26937393fa24cb79455c334b5e89fde3aa7564ce1e0e82e42e2a62f6&" alt="Respect Logo" width="50">
+            <img src="https://cdn.discordapp.com/attachments/1436149485167185940/1454355201539702905/logo.png?ex=69521ad4&is=6950c954&hm=94cca90d26937393fa24cb79455c334b5e89fde3aa7564ce1e0e82e42e2a62f6&" alt="Logo" width="50">
             <h1>RESPECT <span style="color:var(--neon-green)">STREAMS</span></h1>
         </div>
         <div class="search-box">
@@ -39,23 +21,21 @@
         </div>
     </header>
 
-    <div class="container">
+    <div class="container" style="display: flex;">
         <aside class="sidebar">
             <h3><i class="fa-solid fa-filter"></i> الفئات</h3>
-            <button class="filter-btn active" onclick="filterData('all')">
-                <i class="fa-solid fa-globe"></i> الكل
-            </button>
+            <button class="filter-btn active" onclick="filterData('all')"><i class="fa-solid fa-globe"></i> الكل</button>
             
             <div class="filter-group">
                 <h4>جهات حكومية</h4>
-                <button class="filter-btn" onclick="filterData('police')"><i class="fa-solid fa-handcuffs"></i> الشرطة</button>
-                <button class="filter-btn" onclick="filterData('ems')"><i class="fa-solid fa-truck-medical"></i> الإسعاف</button>
-                <button class="filter-btn" onclick="filterData('justice')"><i class="fa-solid fa-scale-balanced"></i> العدل</button>
+                <button class="filter-btn" onclick="filterData('police')">الشرطة</button>
+                <button class="filter-btn" onclick="filterData('ems')">الإسعاف</button>
+                <button class="filter-btn" onclick="filterData('justice')">العدل</button>
             </div>
 
             <div class="filter-group">
                 <h4>خارج القانون</h4>
-                <button class="filter-btn" onclick="filterData('criminal')"><i class="fa-solid fa-user-ninja"></i> مجرم</button>
+                <button class="filter-btn" onclick="filterData('criminal')">مجرم</button>
             </div>
 
             <div class="filter-group">
@@ -73,31 +53,29 @@
             </div>
         </aside>
 
-        <main>
+        <main style="flex: 1; padding: 20px;">
             <div id="streamers-container" class="grid-container">
-                <div id="loading-spinner" style="text-align:center; width:100%; grid-column: 1/-1; color:white; padding-top: 50px;">
+                <div style="text-align:center; width:100%; grid-column: 1/-1; color:white; padding-top: 50px;">
                     <i class="fa-solid fa-circle-notch fa-spin" style="font-size:2.5rem; color:var(--neon-green);"></i>
-                    <p style="margin-top:15px; font-weight:600;">جاري جلب الستريمرز...</p>
+                    <p>جاري تحميل الستريمرز...</p>
                 </div>
             </div>
         </main>
     </div>
 
     <footer>
-        <p>جميع الحقوق محفوظة &copy; 2024 لمجتمع <span style="color:var(--neon-green)">Respect</span></p>
+        <p>جميع الحقوق محفوظة &copy; 2026 ستريمرز <span style="color:var(--neon-green)">Respect</span></p>
     </footer>
 
     <script type="module" src="main.js"></script>
 
     <script>
-        window.filterData = (category) => {
+        // الربط بين الواجهة ومنطق البرمجة
+        window.filterData = (cat) => {
             if (window.appFilter) {
-                window.appFilter(category);
-                
-                // تحديث تأثير الزر النشط (Active)
-                document.querySelectorAll('.filter-btn').forEach(btn => {
-                    btn.classList.remove('active');
-                });
+                window.appFilter(cat);
+                // تغيير حالة الزر النشط
+                document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
                 event.currentTarget.classList.add('active');
             }
         };
