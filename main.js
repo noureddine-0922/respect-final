@@ -1,8 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// إعدادات Firebase الخاصة بك
+// إعدادات Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyBjEc-wdY6s6v0AiVg4texFrohLwDcdaiU",
     authDomain: "respect-db-d1320.firebaseapp.com",
@@ -14,137 +13,87 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const auth = getAuth(app);
+let streamers = [];
 
-let allStreamers = [];
-let timeLeft = 15;
-const ADMIN_EMAIL = "nounouachour2003@gmail.com"; // تأكد من وضع ايميلك هنا
-
-// --- 1. وظيفة جلب البيانات من Kick (محاكاة متصفح) ---
-async function fetchKickData(username) {
+// وظيفة جلب البيانات الأساسية من Firebase
+async function fetchData() {
     try {
-        const response = await fetch(`/api?user=${username}&t=${Date.now()}`);
-        return await response.json();
+        const snap = await getDocs(collection(db, "streamers"));
+        streamers = snap.docs.map(d => ({
+            ...d.data(), 
+            live: false, 
+            views: 0, 
+            pfp: d.data().image || 'https://via.placeholder.com/150'
+        }));
+        render(); // الرسم الأولي
+        updateStatus(); // بدء جلب الحالات من كيك
     } catch (error) {
-        console.error("خطأ في جلب بيانات كيك:", error);
-        return null;
+        console.error("خطأ في جلب البيانات:", error);
     }
 }
 
-// --- 2. جلب القائمة من Firebase وتحديث الحالات ---
-async function refreshStreamersData() {
-    try {
-        // إذا كانت القائمة فارغة، نجلبها من Firebase أولاً
-        if (allStreamers.length === 0) {
-            const q = query(collection(db, "streamers"));
-            const querySnapshot = await getDocs(q);
-            allStreamers = querySnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-                live: false,
-                viewers: 0,
-                title: ""
-            }));
+// تحديث حالة البث والمشاهدات من Kick API
+async function updateStatus() {
+    // جلب الحالات لكل ستريمر بشكل متتابع لتجنب الحظر
+    for (const s of streamers) {
+        try {
+            const r = await fetch(`/api?user=${s.username}&t=${Date.now()}`);
+            const d = await r.json();
+            
+            s.live = d.livestream?.is_live || false;
+            s.views = d.livestream?.viewer_count || 0;
+            if (d.user?.profile_pic) s.pfp = d.user.profile_pic;
+            
+            render(); // تحديث الواجهة فوراً عند كل جلب ناجح
+        } catch(e) {
+            console.warn(`فشل جلب حالة: ${s.username}`);
         }
-
-        // تحديث الحالات من Kick (نظام الدفعات Batching)
-        for (let i = 0; i < allStreamers.length; i += 4) {
-            const batch = allStreamers.slice(i, i + 4);
-            await Promise.all(batch.map(async (s) => {
-                const data = await fetchKickData(s.username);
-                if (data) {
-                    const idx = allStreamers.findIndex(x => x.username === s.username);
-                    allStreamers[idx].live = data.livestream?.is_live || false;
-                    allStreamers[idx].viewers = data.livestream?.viewer_count || 0;
-                    allStreamers[idx].title = data.livestream?.session_title || "بث مباشر";
-                    allStreamers[idx].pfp = data.user?.profile_pic || s.image;
-                }
-            }));
-        }
-        renderGrid();
-    } catch (err) {
-        console.error("فشل التحديث:", err);
     }
 }
 
-// --- 3. رسم البطاقات في الصفحة ---
-function renderGrid(filteredList = null) {
+// وظيفة رسم البطاقات بنظام Grid (3-4 في السطر)
+function render(filter = 'all') {
     const container = document.getElementById('streamers-container');
     if (!container) return;
 
-    const listToDisplay = filteredList || allStreamers;
+    const list = filter === 'all' ? streamers : streamers.filter(x => x.category === filter);
     
-    // ترتيب: المباشر أولاً ثم حسب عدد المشاهدين
-    listToDisplay.sort((a, b) => (b.live - a.live) || (b.viewers - a.viewers));
+    // الترتيب: المباشر أولاً ثم حسب عدد المشاهدين
+    list.sort((a, b) => (b.live - a.live) || (b.views - a.views));
 
-    container.innerHTML = listToDisplay.map(s => `
-        <div class="card ${s.live ? 'live-on' : 'live-off'}">
-            <div class="badge">${s.live ? '🔴 مباشر' : 'أوفلاين'}</div>
-            <div class="pfp-wrap">
-                <img src="${s.pfp || s.image || 'https://via.placeholder.com/150'}" loading="lazy">
-                ${s.live ? `<div class="v-count"><i class="fa-solid fa-eye"></i> ${s.viewers.toLocaleString()}</div>` : ''}
-            </div>
+    container.innerHTML = list.map(s => `
+        <div class="card ${s.live ? 'live-on' : ''}">
+            ${s.live ? `<div class="viewers-tag"><i class="fa-solid fa-eye"></i> ${s.views.toLocaleString()}</div>` : ''}
+            <img src="${s.pfp}" alt="${s.name}" loading="lazy">
             <h3>${s.name}</h3>
-            <p class="s-title">${s.live ? s.title : (s.icName || 'مواطن')}</p>
-            <a href="https://kick.com/${s.username}" target="_blank" class="go-btn">دخول القناة</a>
+            <p style="font-size:0.8rem; color:#78716c; height: 20px; overflow: hidden;">
+                ${s.live ? 'بث مباشر الآن' : (s.icName || 'أوفلاين')}
+            </p>
+            <a href="https://kick.com/${s.username}" target="_blank" class="watch-btn">مشاهدة القناة</a>
         </div>
     `).join('');
 
-    updateStats();
-}
-
-// --- 4. تحديث شريط الإحصائيات العلوي ---
-function updateStats() {
-    const liveStreamers = allStreamers.filter(s => s.live);
-    const totalViewers = liveStreamers.reduce((acc, curr) => acc + curr.viewers, 0);
+    // تحديث الإحصائيات العلوية
+    const liveCount = streamers.filter(x => x.live).length;
+    const totalViews = streamers.reduce((a, b) => a + b.views, 0);
 
     const totalEl = document.getElementById('total-streamers');
     const liveEl = document.getElementById('live-count');
     const viewersEl = document.getElementById('total-viewers');
 
-    if (totalEl) totalEl.innerText = allStreamers.length;
-    if (liveEl) liveEl.innerText = liveStreamers.length;
-    if (viewersEl) viewersEl.innerText = totalViewers.toLocaleString();
+    if (totalEl) totalEl.innerText = streamers.length;
+    if (liveEl) liveEl.innerText = liveCount;
+    if (viewersEl) viewersEl.innerText = totalViews.toLocaleString();
 }
 
-// --- 5. نظام الفلترة ---
-window.runFilter = (category) => {
-    if (category === 'all') {
-        renderGrid();
-    } else {
-        const filtered = allStreamers.filter(s => s.category === category);
-        renderGrid(filtered);
-    }
+// نظام الفلترة العالمي
+window.runFilter = (cat) => {
+    render(cat);
 };
 
-// --- 6. مؤقت التحديث التلقائي ---
-function startTimer() {
-    setInterval(() => {
-        timeLeft--;
-        const clockEl = document.getElementById('refresh-clock');
-        const progressEl = document.getElementById('progress-fill');
-        
-        if (clockEl) clockEl.innerText = timeLeft;
-        if (progressEl) progressEl.style.width = `${(timeLeft / 15) * 100}%`;
+// بدء التشغيل عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', fetchData);
 
-        if (timeLeft <= 0) {
-            timeLeft = 15;
-            refreshStreamersData();
-        }
-    }, 1000);
-}
-
-// --- 7. التحقق من دخول الأدمن (لوحة التحكم) ---
-onAuthStateChanged(auth, (user) => {
-    if (user && user.email === ADMIN_EMAIL) {
-        console.log("مرحباً أيها الأونر!");
-        // هنا يمكنك إظهار أزرار الحذف أو التعديل إذا كانت موجودة في الـ HTML
-    }
-});
-
-// تشغيل النظام عند التحميل
-document.addEventListener('DOMContentLoaded', () => {
-    refreshStreamersData();
-    startTimer();
-});
+// إعادة تحديث الحالات تلقائياً كل 15 ثانية لضمان الدقة اللحظية
+setInterval(updateStatus, 15000);
 

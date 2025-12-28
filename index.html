@@ -4,33 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ريسبكت ستريمرز | Respect Streamers</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&family=Tajawal:wght@500;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <header class="main-header">
-        <div class="logo-container">
-            <img src="https://files.kick.com/images/user/5710904/profile_image/conversion/41b5d19a-bbe0-4b9a-8004-cc9c6052f812-fullsize.webp" alt="Logo" class="top-logo">
+        <div class="header-content">
+            <img src="https://files.kick.com/images/user/5710904/profile_image/conversion/41b5d19a-bbe0-4b9a-8004-cc9c6052f812-fullsize.webp" alt="Respect Logo" class="brand-logo">
+            <h1>ريسبكت ستريمرز</h1>
+            <p class="tagline">أول منصة تجمع حالة ستريمرز ريسبكت لحظة بلحظة</p>
         </div>
-        <h1>ريسبكت ستريمرز</h1>
-        <p class="hero-desc">أول منصة تجمع حالة ستريمرز ريسبكت لحظة بلحظة</p>
-        
-        <div class="stats-grid">
-            <div class="stat-card"><i class="fa-solid fa-users"></i> <div class="s-info"><span id="total-streamers">0</span><label>الستريمرز</label></div></div>
-            <div class="stat-card live-glow"><i class="fa-solid fa-tower-broadcast fa-beat"></i> <div class="s-info"><span id="live-count">0</span><label>يبث الآن</label></div></div>
-            <div class="stat-card"><i class="fa-solid fa-eye"></i> <div class="s-info"><span id="total-viewers">0</span><label>المشاهدات</label></div></div>
+
+        <div class="quick-stats">
+            <div class="stat-box">
+                <i class="fa-solid fa-users"></i>
+                <div class="stat-text"><span>الستريمرز</span> <b id="total-streamers">0</b></div>
+            </div>
+            <div class="stat-box live-pulse">
+                <i class="fa-solid fa-tower-broadcast"></i>
+                <div class="stat-text"><span>يبث الآن</span> <b id="live-count">0</b></div>
+            </div>
+            <div class="stat-box">
+                <i class="fa-solid fa-eye"></i>
+                <div class="stat-text"><span>المشاهدات</span> <b id="total-viewers">0</b></div>
+            </div>
         </div>
     </header>
 
-    <div class="app-container">
-        <aside class="sidebar">
+    <div class="container">
+        <aside class="sidebar-right">
+            <h3><i class="fa-solid fa-shield-halved"></i> الجهات الحكومية</h3>
             <button class="filter-btn active" onclick="filterData('all')">الكل</button>
-            <div class="side-sect">الجهات</div>
             <button class="filter-btn" onclick="filterData('police')">الشرطة</button>
             <button class="filter-btn" onclick="filterData('ems')">الإسعاف</button>
-            <div class="side-sect">العصابات</div>
+            <button class="filter-btn" onclick="filterData('justice')">العدل</button>
+
+            <h3><i class="fa-solid fa-skull"></i> العصابات والعوائل</h3>
             <button class="filter-btn" onclick="filterData('yakuza')">الياكوزا</button>
             <button class="filter-btn" onclick="filterData('crypto')">Crypto</button>
             <button class="filter-btn" onclick="filterData('middle')">Middle Gang</button>
@@ -41,20 +52,20 @@
             <button class="filter-btn" onclick="filterData('obeid')">عائلة عبيد</button>
         </aside>
 
-        <main class="content-view">
-            <div id="streamers-container" class="main-grid">
+        <main class="streamers-view">
+            <div id="streamers-container" class="grid-layout">
                 </div>
         </main>
     </div>
 
-    <footer class="footer">
-        <p>جميع الحقوق محفوظة &copy; 2026 - <span class="purp">ريسبكت ستريمرز</span></p>
+    <footer class="site-footer">
+        <p>جميع الحقوق محفوظة &copy; 2026 - <span>ريسبكت ستريمرز</span></p>
     </footer>
 
     <script type="module" src="main.js"></script>
     <script>
-        function filterData(c){
-            if(window.runFilter) window.runFilter(c);
+        function filterData(cat) {
+            if(window.runFilter) window.runFilter(cat);
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             event.currentTarget.classList.add('active');
         }
