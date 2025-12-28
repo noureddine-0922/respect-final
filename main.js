@@ -18,13 +18,13 @@ let allStreamers = [];
 let refreshSeconds = 30;
 
 /**
- * جلب حالة الستريمر عبر Cloudflare (الأساسي القوي) 
- * مع تمرير التوقيت لمنع الكاش وضمان تحديث الحالة لحظياً
+ * جلب حالة الستريمر من Cloudflare مباشرة (Native Sync)
+ * نستخدم t=Date.now لضمان جلب الحالة الحقيقية من كيك
  */
 async function getKickStatus(username) {
     try {
         const response = await fetch(`/api?user=${username}&t=${Date.now()}`);
-        if (!response.ok) throw new Error('Proxy Error');
+        if (!response.ok) throw new Error('Cloudflare Error');
         const data = await response.json();
         
         return {
@@ -33,59 +33,58 @@ async function getKickStatus(username) {
             pfp: data.user ? data.user.profile_pic : null
         };
     } catch (e) {
-        console.error(`فشل جلب حالة ${username}:`, e);
+        console.error(`خطأ في جلب حالة ${username}:`, e);
         return { isLive: false, viewers: 0, pfp: null };
     }
 }
 
 /**
- * الدالة الرئيسية: تعرض البطاقات أولاً ثم تحدث الحالات في الخلفية
+ * تحميل البيانات: تعرض البطاقات فوراً ثم تحدث الحالات تدريجياً
  */
 async function loadData() {
     try {
-        // 1. جلب البيانات من Firebase وعرضها فوراً (بدون انتظار حالات البث)
+        // 1. جلب القائمة من Firebase وعرضها فوراً (بدون انتظار) لضمان السرعة
         const querySnapshot = await getDocs(collection(db, "streamers"));
         allStreamers = querySnapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data(),
-            isLive: false, // قيمة افتراضية حتى يتم جلب الحالة الحقيقية
+            isLive: false, // قيمة مبدئية
             viewers: 0
         }));
 
-        // عرض البطاقات فوراً لضمان سرعة الموقع أمام المستخدم
+        // عرض البطاقات الـ 11 فوراً
         renderStreamers(allStreamers);
         updateStats();
 
-        // 2. تحديث حالات البث في الخلفية (Background Update)
-        // نستخدم Promise.all لضمان معالجة الجميع لكننا نحدث الواجهة لكل واحد يصل رده
+        // 2. تحديث حالات البث في الخلفية عبر Cloudflare لكل ستريمر بشكل منفصل
+        // هذا يمنع التذبذب لأن كل بطاقة تتحدث فقط عندما تصل بياناتها الحقيقية
         allStreamers.forEach(async (streamer, index) => {
             const status = await getKickStatus(streamer.username);
             
-            // تحديث بيانات الستريمر في المصفوفة دون حذف البطاقة
+            // تحديث بيانات الستريمر في المصفوفة الأساسية
             allStreamers[index] = { ...streamer, ...status };
 
-            // إعادة ترتيب المصفوفة (المباشر أولاً ثم المشاهدات) وتحديث الواجهة
+            // ترتيب المصفوفة (المباشر أولاً) وتحديث الواجهة تدريجياً
             allStreamers.sort((a, b) => (b.isLive - a.isLive) || (b.viewers - a.viewers));
             
-            // تحديث البطاقات والإحصائيات فور وصول أي تحديث جديد
             renderStreamers(allStreamers);
             updateStats();
         });
 
     } catch (error) {
-        console.error("خطأ في الاتصال بقاعدة البيانات:", error);
+        console.error("Firebase Connection Error:", error);
     }
 }
 
 /**
- * عرض البطاقات في الحاوية الرئيسية
+ * دالة عرض البطاقات في الحاوية (Grid-3)
  */
 function renderStreamers(list) {
     const container = document.getElementById('streamers-container');
     if (!container) return;
     
     container.innerHTML = list.map(s => `
-        <div class="card ${s.isLive ? 'border-live' : ''}" id="card-${s.id}">
+        <div class="card ${s.isLive ? 'border-live' : ''}">
             <div class="status-tag ${s.isLive ? 'bg-live' : 'bg-off'}">
                 ${s.isLive ? `<span class="pulse-dot"></span> مباشر | ${s.viewers}` : 'غير متصل'}
             </div>
@@ -95,14 +94,14 @@ function renderStreamers(list) {
                 <p><i class="fa-solid fa-id-card"></i> ${s.icName || 'بدون اسم'}</p>
             </div>
             <a href="https://kick.com/${s.username}" target="_blank" class="kick-link">
-                ${s.isLive ? 'مشاهدة الآن' : 'قناة الستريمر'}
+                ${s.isLive ? 'مشاهدة البث' : 'قناة الستريمر'}
             </a>
         </div>
     `).join('');
 }
 
 /**
- * تحديث شريط الإحصائيات في الهيدر
+ * تحديث شريط الإحصائيات العلوي
  */
 function updateStats() {
     const liveItems = allStreamers.filter(s => s.isLive);
@@ -112,7 +111,7 @@ function updateStats() {
 }
 
 /**
- * نظام التوقيت للتحديث التلقائي كل 30 ثانية
+ * نظام العد التنازلي للتحديث التلقائي
  */
 function startCountdown() {
     const timerElement = document.getElementById('refresh-clock');
@@ -122,12 +121,12 @@ function startCountdown() {
         
         if (refreshSeconds <= 0) {
             refreshSeconds = 30;
-            loadData(); // إعادة تشغيل الدورة بالكامل
+            loadData(); // إعادة تشغيل دورة التحديث
         }
     }, 1000);
 }
 
-// نظام البحث (فلترة لحظية من المصفوفة الموجودة)
+// نظام البحث اللحظي
 document.getElementById('searchInput')?.addEventListener('input', (e) => {
     const term = e.target.value.toLowerCase();
     const filtered = allStreamers.filter(s => 
@@ -136,13 +135,13 @@ document.getElementById('searchInput')?.addEventListener('input', (e) => {
     renderStreamers(filtered);
 });
 
-// نظام الفئات
+// نظام فلترة الفئات (Sidebar)
 window.appFilter = (category) => {
     const filtered = category === 'all' ? allStreamers : allStreamers.filter(s => s.category === category);
     renderStreamers(filtered);
 };
 
-// تشغيل النظام
+// تشغيل التطبيق
 loadData();
 startCountdown();
 
