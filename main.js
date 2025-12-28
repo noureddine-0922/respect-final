@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// إعدادات Firebase
+// إعدادات Firebase الخاصة بك
 const firebaseConfig = {
     apiKey: "AIzaSyBjEc-wdY6s6v0AiVg4texFrohLwDcdaiU",
     authDomain: "respect-db-d1320.firebaseapp.com",
@@ -14,68 +14,101 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 let streamers = [];
+let currentFilter = 'all';
 
-// وظيفة جلب البيانات الأساسية من Firebase
+// وظيفة جلب البيانات من Firebase
 async function fetchData() {
     try {
-        const snap = await getDocs(collection(db, "streamers"));
-        streamers = snap.docs.map(d => ({
-            ...d.data(), 
-            live: false, 
-            views: 0, 
-            pfp: d.data().image || 'https://via.placeholder.com/150'
+        const querySnapshot = await getDocs(collection(db, "streamers"));
+        streamers = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            live: false,
+            views: 0,
+            title: "",
+            pfp: doc.data().image || 'https://via.placeholder.com/150'
         }));
-        render(); // الرسم الأولي
-        updateStatus(); // بدء جلب الحالات من كيك
+        render(); // عرض البيانات الأولية
+        updateStatus(); // بدء تحديث الحالات فوراً
     } catch (error) {
-        console.error("خطأ في جلب البيانات:", error);
+        console.error("خطأ في جلب بيانات الفايربيس:", error);
     }
 }
 
-// تحديث حالة البث والمشاهدات من Kick API
+// وظيفة الجلب الذكي (محاكاة إنسان)
+async function fetchSmart(username) {
+    const headers = new Headers({
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    });
+
+    try {
+        // إضافة timestamp عشوائي لكسر الكاش تماماً
+        const response = await fetch(`/api?user=${username}&_t=${Date.now()}`, { headers });
+        if (!response.ok) return null;
+        return await response.json();
+    } catch (e) {
+        return null;
+    }
+}
+
+// تحديث الحالات بتردد ذكي
 async function updateStatus() {
-    // جلب الحالات لكل ستريمر بشكل متتابع لتجنب الحظر
-    for (const s of streamers) {
-        try {
-            const r = await fetch(`/api?user=${s.username}&t=${Date.now()}`);
-            const d = await r.json();
+    for (let s of streamers) {
+        const data = await fetchSmart(s.username);
+        
+        if (data) {
+            s.live = data.livestream?.is_live || false;
+            s.views = data.livestream?.viewer_count || 0;
+            s.title = data.livestream?.session_title || "";
+            if (data.user?.profile_pic) s.pfp = data.user.profile_pic;
             
-            s.live = d.livestream?.is_live || false;
-            s.views = d.livestream?.viewer_count || 0;
-            if (d.user?.profile_pic) s.pfp = d.user.profile_pic;
-            
-            render(); // تحديث الواجهة فوراً عند كل جلب ناجح
-        } catch(e) {
-            console.warn(`فشل جلب حالة: ${s.username}`);
+            // تحديث الواجهة عند كل تغيير لضمان السرعة
+            render(currentFilter);
         }
+        // تأخير بسيط (150ms) بين كل طلب وآخر لمحاكاة التصفح الطبيعي
+        await new Promise(r => setTimeout(r, 150));
     }
 }
 
-// وظيفة رسم البطاقات بنظام Grid (3-4 في السطر)
+// وظيفة الرسم (الريندر) - تدعم الفلترة والترتيب
 function render(filter = 'all') {
+    currentFilter = filter;
     const container = document.getElementById('streamers-container');
     if (!container) return;
 
-    const list = filter === 'all' ? streamers : streamers.filter(x => x.category === filter);
-    
-    // الترتيب: المباشر أولاً ثم حسب عدد المشاهدين
-    list.sort((a, b) => (b.live - a.live) || (b.views - a.views));
+    // تصفية العناصر بناءً على الفئة
+    let filtered = filter === 'all' ? streamers : streamers.filter(s => s.category === filter);
 
-    container.innerHTML = list.map(s => `
+    // الترتيب: اللايف أولاً، ثم حسب عدد المشاهدات
+    filtered.sort((a, b) => (b.live - a.live) || (b.views - a.views));
+
+    container.innerHTML = filtered.map(s => `
         <div class="card ${s.live ? 'live-on' : ''}">
-            ${s.live ? `<div class="viewers-tag"><i class="fa-solid fa-eye"></i> ${s.views.toLocaleString()}</div>` : ''}
+            ${s.live ? `
+                <div class="viewers-tag">
+                    <i class="fa-solid fa-eye"></i> ${s.views.toLocaleString()}
+                </div>
+            ` : ''}
             <img src="${s.pfp}" alt="${s.name}" loading="lazy">
             <h3>${s.name}</h3>
-            <p style="font-size:0.8rem; color:#78716c; height: 20px; overflow: hidden;">
-                ${s.live ? 'بث مباشر الآن' : (s.icName || 'أوفلاين')}
+            <p class="stream-status-text">
+                ${s.live ? (s.title || 'بث مباشر الآن') : (s.icName || 'غير متصل')}
             </p>
-            <a href="https://kick.com/${s.username}" target="_blank" class="watch-btn">مشاهدة القناة</a>
+            <a href="https://kick.com/${s.username}" target="_blank" class="watch-btn">
+                ${s.live ? 'مشاهدة البث' : 'زيارة القناة'}
+            </a>
         </div>
     `).join('');
 
-    // تحديث الإحصائيات العلوية
-    const liveCount = streamers.filter(x => x.live).length;
-    const totalViews = streamers.reduce((a, b) => a + b.views, 0);
+    updateStatsDisplay();
+}
+
+// تحديث عدادات الإحصائيات في الهيدر
+function updateStatsDisplay() {
+    const liveCount = streamers.filter(s => s.live).length;
+    const totalViews = streamers.reduce((acc, s) => acc + s.views, 0);
 
     const totalEl = document.getElementById('total-streamers');
     const liveEl = document.getElementById('live-count');
@@ -86,14 +119,21 @@ function render(filter = 'all') {
     if (viewersEl) viewersEl.innerText = totalViews.toLocaleString();
 }
 
-// نظام الفلترة العالمي
-window.runFilter = (cat) => {
-    render(cat);
+// نظام الفلترة عند الضغط على الأزرار
+window.runFilter = (category) => {
+    // تحديث شكل الأزرار
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if(btn.innerText.includes(category) || (category === 'all' && btn.innerText.includes('الكل'))) {
+            btn.classList.add('active');
+        }
+    });
+    render(category);
 };
 
-// بدء التشغيل عند تحميل الصفحة
+// التشغيل عند التحميل
 document.addEventListener('DOMContentLoaded', fetchData);
 
-// إعادة تحديث الحالات تلقائياً كل 15 ثانية لضمان الدقة اللحظية
-setInterval(updateStatus, 15000);
+// تحديث دوري شامل كل 30 ثانية لضمان الدقة
+setInterval(updateStatus, 30000);
 
