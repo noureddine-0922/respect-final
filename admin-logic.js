@@ -27,7 +27,7 @@ logoutBtn.onclick = () => signOut(auth);
 
 onAuthStateChanged(auth, (user) => {
     // استبدل الايميل بالخاص بك لتكون أنت الأونر الوحيد
-    if (user && user.email === "إيميلك@gmail.com") {
+    if (user && user.email === "nounouachour2003@gmail.com") {
         authSection.style.display = 'none';
         dashSection.style.display = 'block';
     } else {
