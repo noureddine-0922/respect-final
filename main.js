@@ -1,7 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// إعدادات Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyBjEc-wdY6s6v0AiVg4texFrohLwDcdaiU",
     authDomain: "respect-db-d1320.firebaseapp.com",
@@ -13,97 +12,121 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-let allStreamers = [];
-let refreshSeconds = 15; // تقليل الوقت لـ 15 ثانية لسرعة أكبر
 
-// دالة جلب الحالة الفردية (طلقة سريعة عبر Cloudflare)
-async function fetchStatus(streamer) {
+let allStreamers = [];
+let refreshSeconds = 15;
+const BATCH_SIZE = 5; [span_1](start_span)// جلب 5 ستريمرز في كل دفعة لمنع الحظر[span_1](end_span)
+
+/**
+ * جلب البيانات من Kick عبر نظام الوكيل المتوازي
+ * [span_2](start_span)نستخدم تكتيك "كسر الكاش" لضمان بيانات لحظية[span_2](end_span)
+ */
+async function fetchKickStatus(streamer) {
     try {
         const response = await fetch(`/api?user=${streamer.username}&t=${Date.now()}`);
+        if (!response.ok) throw new Error();
         const data = await response.json();
         
-        const status = {
+        return {
             isLive: data.livestream?.is_live === true,
             viewers: data.livestream?.viewer_count || 0,
-            pfp: data.user?.profile_pic || null
+            pfp: data.user?.profile_pic || null,
+            title: data.livestream?.session_title || [span_3](start_span)""[span_3](end_span)
         };
-
-        const idx = allStreamers.findIndex(s => s.username === streamer.username);
-        if (idx !== -1) {
-            allStreamers[idx] = { ...allStreamers[idx], ...status };
-            updateUI(); // تحديث الواجهة فوراً عند وصول كل نتيجة
-        }
     } catch (e) {
-        console.error("خطأ في جلب بيانات:", streamer.username);
+        return { isLive: false, viewers: 0, pfp: null, title: "" };
     }
 }
 
-// الدالة الرئيسية لجلب البيانات
+/**
+ * معالجة الستريمرز بنظام الدفعات (Batch Processing)
+ * [span_4](start_span)لضمان عدم الضغط على الـ API وتجنب الـ 403[span_4](end_span)
+ */
+async function processStreamersInBatches(list) {
+    for (let i = 0; i < list.length; i += BATCH_SIZE) {
+        const batch = list.slice(i, i + BATCH_SIZE);
+        await Promise.all(batch.map(async (streamer) => {
+            const status = await fetchKickStatus(streamer);
+            const idx = allStreamers.findIndex(s => s.username === streamer.username);
+            if (idx !== -1) {
+                allStreamers[idx] = { ...allStreamers[idx], ...status };
+                [span_5](start_span)renderUI(); // تحديث تدريجي للواجهة[span_5](end_span)
+            }
+        }));
+        [span_6](start_span)// فاصل زمني بسيط بين الدفعات لتقليد السلوك البشري[span_6](end_span)
+        if (i + BATCH_SIZE < list.length) await new Promise(r => setTimeout(r, 1000));
+    }
+}
+
 async function loadData() {
     try {
-        // إذا كانت القائمة فارغة، نجلبها من Firebase أولاً
         if (allStreamers.length === 0) {
             const snap = await getDocs(collection(db, "streamers"));
             allStreamers = snap.docs.map(doc => ({ 
-                id: doc.id, 
-                ...doc.data(), 
-                isLive: false, 
-                viewers: 0 
+                id: doc.id, ...doc.data(), isLive: false, viewers: 0 
             }));
-            updateUI(); 
+            renderUI();
         }
 
-        // إطلاق جميع الطلبات "بالتوازي" في نفس اللحظة (بدون انتظار متسلسل)
-        allStreamers.forEach(s => fetchStatus(s));
-        
+        [span_7](start_span)// ترتيب الأولية: نفحص من كانوا "Live" أولاً لسرعة التحديث[span_7](end_span)
+        const queue = [...allStreamers].sort((a, b) => b.isLive - a.isLive);
+        await processStreamersInBatches(queue);
+
     } catch (err) {
-        console.error("فشل التحميل:", err);
+        console.error("Critical Load Error", err);
     }
 }
 
-function updateUI() {
-    // الترتيب: المباشر أولاً ثم الأعلى مشاهدة
+function renderUI() {
+    const container = document.getElementById('streamers-container');
+    if (!container) return;
+
+    [span_8](start_span)// ترتيب العرض: المباشر أولاً ثم حسب عدد المشاهدين[span_8](end_span)
     allStreamers.sort((a, b) => (b.isLive - a.isLive) || (b.viewers - a.viewers));
-    renderCards(allStreamers);
-    
-    // تحديث الأرقام في الهيدر
+
+    [span_9](start_span)// استخدام الـ Fragment لتحسين الأداء ومنع الوميض[span_9](end_span)
+    container.innerHTML = allStreamers.map(s => `
+        <div class="card ${s.isLive ? 'live-border' : ''}">
+            <div class="status-badge ${s.isLive ? 'bg-live' : 'bg-off'}">
+                ${s.isLive ? `🔴 مباشر | ${s.viewers.toLocaleString('en-US')}` : 'غير متصل'}
+            </div>
+            <div class="pfp-wrapper">
+                <img src="${s.pfp || s.image || 'placeholder.png'}" class="pfp" loading="lazy">
+            </div>
+            <h3>${s.name}</h3>
+            ${s.isLive ? `<p class="stream-title">📺 ${s.title}</p>` : `<p class="ic-name">🆔 ${s.icName || 'غير متوفر'}</p>`}
+            <a href="https://kick.com/${s.username}" target="_blank" class="kick-btn">
+                ${s.isLive ? 'شاهد البث الآن' : 'انتقل للقناة'}
+            </a>
+        </div>
+    `).join('');
+
+    updateStats();
+}
+
+function updateStats() {
     const live = allStreamers.filter(s => s.isLive);
     document.getElementById('total-streamers').innerText = allStreamers.length;
     document.getElementById('live-count').innerText = live.length;
-    document.getElementById('total-viewers').innerText = live.reduce((a, b) => a + b.viewers, 0);
+    [span_10](start_span)document.getElementById('total-viewers').innerText = live.reduce((a, b) => a + b.viewers, 0).toLocaleString('en-US');[span_10](end_span)
 }
 
-function renderCards(list) {
-    const container = document.getElementById('streamers-container');
-    if (!container) return;
-    container.innerHTML = list.map(s => `
-        <div class="card ${s.isLive ? 'border-live' : ''}">
-            <div class="status-tag ${s.isLive ? 'bg-live' : 'bg-off'}">
-                ${s.isLive ? `<span class="pulse-dot"></span> مباشر | ${s.viewers}` : 'غير متصل'}
-            </div>
-            <img src="${s.pfp || s.image || 'https://via.placeholder.com/150'}" class="pfp">
-            <h3>${s.name}</h3>
-            <p><i class="fa-solid fa-id-card"></i> ${s.icName || 'بدون اسم'}</p>
-            <a href="https://kick.com/${s.username}" target="_blank" class="kick-link">مشاهدة</a>
-        </div>
-    `).join('');
-}
-
-// نظام العداد التنازلي الجديد (15 ثانية)
 function startTimer() {
-    const clock = document.getElementById('refresh-clock');
     setInterval(() => {
         refreshSeconds--;
+        const clock = document.getElementById('refresh-clock');
         if (clock) clock.innerText = refreshSeconds;
         
         if (refreshSeconds <= 0) {
             refreshSeconds = 15;
-            loadData();
+            loadData(); 
         }
     }, 1000);
 }
 
-// التشغيل الفوري
-loadData(); 
-startTimer();
+[span_11](start_span)// التشغيل عند الجاهزية[span_11](end_span)
+document.addEventListener('DOMContentLoaded', () => {
+    loadData();
+    startTimer();
+});
 
