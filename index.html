@@ -13,7 +13,7 @@
 <body>
 
     <header class="main-header">
-        <img src="https://cdn.discordapp.com/attachments/1436149485167185940/1454355201539702905/logo.png?ex=69521ad4&is=6950c954&hm=94cca90d26937393fa24cb79455c334b5e89fde3aa7564ce1e0e82e42e2a62f6&" alt="Respect Logo" class="top-logo">
+        <img src="https://cdn.discordapp.com/attachments/1436149485167185940/1454355201539702905/logo.png" alt="Respect Logo" class="top-logo">
         <h1>ريسبكت ستريمرز</h1>
         <p>أول منصة تجمع حالة ستريمرز ريسبكت لحظة بلحظة</p>
         
@@ -23,6 +23,10 @@
             <div class="stat-item">المشاهدات: <span id="total-viewers">0</span></div>
         </div>
 
+        <div class="refresh-timer">
+            <i class="fa-solid fa-sync fa-spin"></i> تحديث تلقائي خلال: <span id="refresh-clock">30</span> ثانية
+        </div>
+
         <div class="search-container">
             <i class="fa-solid fa-magnifying-glass"></i>
             <input type="text" id="searchInput" placeholder="ابحث عن ستريمر أو شخصية...">
@@ -30,17 +34,19 @@
     </header>
 
     <div class="app-layout">
+        
         <main class="content-area">
             <div id="streamers-container" class="grid-3">
                 <div style="text-align:center; width:100%; grid-column: 1/-1; color:white; padding-top: 50px;">
-                    <i class="fa-solid fa-circle-notch fa-spin" style="font-size:2.5rem; color:var(--neon-green);"></i>
-                    <p style="margin-top:15px;">جاري جلب حالات البث المباشر...</p>
+                    <i class="fa-solid fa-circle-notch fa-spin" style="font-size:2rem; color:var(--neon-green);"></i>
+                    <p style="margin-top:15px;">جاري الاتصال بالسيرفر وجلب حالات البث...</p>
                 </div>
             </div>
         </main>
 
         <aside class="right-sidebar">
             <h3><i class="fa-solid fa-layer-group"></i> الفئات</h3>
+            
             <button class="filter-btn active" onclick="filterData('all')">
                 <i class="fa-solid fa-globe"></i> الكل
             </button>
@@ -67,6 +73,7 @@
                 <button class="filter-btn" onclick="filterData('oldschool')">Old School</button>
             </div>
         </aside>
+
     </div>
 
     <footer class="main-footer">
@@ -80,7 +87,7 @@
             if (window.appFilter) {
                 window.appFilter(category);
                 
-                // تحديث شكل الزر المختار
+                // تحديث مظهر الزر المختار
                 document.querySelectorAll('.filter-btn').forEach(btn => {
                     btn.classList.remove('active');
                 });
