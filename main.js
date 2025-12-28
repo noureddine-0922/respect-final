@@ -1,7 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// إعدادات Firebase الخاصة بمشروعك (Respect DB)
 const firebaseConfig = {
     apiKey: "AIzaSyBjEc-wdY6s6v0AiVg4texFrohLwDcdaiU",
     authDomain: "respect-db-d1320.firebaseapp.com",
@@ -11,15 +10,12 @@ const firebaseConfig = {
     appId: "1:823436634480:web:3380974cce87d8e82b07b5"
 };
 
-// تهيئة التطبيق وقاعدة البيانات
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// المتغيرات العالمية لحفظ البيانات والتحكم في العرض
 let allStreamers = [];
 const container = document.getElementById('streamers-container');
 
-// قاموس الفئات (تأكد من مطابقتها لما في Firestore)
 const categoryNames = {
     'police': '<i class="fa-solid fa-handcuffs"></i> الشرطة',
     'ems': '<i class="fa-solid fa-truck-medical"></i> الإسعاف',
@@ -37,51 +33,24 @@ const categoryNames = {
     'oldschool': 'Old School'
 };
 
-// 1. وظيفة التحقق من وضع الصيانة
 async function checkMaintenance() {
     try {
-        const configDoc = await getDoc(doc(db, "settings", "config"));
-        if (configDoc.exists() && configDoc.data().maintenance === true) {
-            document.body.innerHTML = `
-                <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; background:#0d1117; color:white; text-align:center; font-family:'Cairo'">
-                    <i class="fa-solid fa-screwdriver-wrench" style="font-size:4rem; color:#00ff88; margin-bottom:20px;"></i>
-                    <h1>الموقع تحت الصيانة حالياً</h1>
-                    <p style="margin-top:10px; color:#888;">نعمل على تحسين تجربتكم، سنعود قريباً!</p>
-                </div>
-            `;
+        const mDoc = await getDoc(doc(db, "settings", "config"));
+        if (mDoc.exists() && mDoc.data().maintenance === true) {
+            document.body.innerHTML = `<div style="display:flex;flex-direction:column;justify-content:center;align-items:center;height:100vh;background:#0d1117;color:white;text-align:center;font-family:'Cairo'"><i class="fa-solid fa-screwdriver-wrench" style="font-size:4rem;color:#00ff88;margin-bottom:20px;"></i><h1>الموقع تحت الصيانة</h1></div>`;
             return true;
         }
-    } catch (e) { console.error("Maintenance Check Error:", e); }
+    } catch (e) { console.log("Maint check skipped"); }
     return false;
 }
 
-// 2. وظيفة جلب البيانات وعرضها
-async function fetchStreamers() {
-    const isMaintenance = await checkMaintenance();
-    if (isMaintenance) return;
-
-    try {
-        const querySnapshot = await getDocs(collection(db, "streamers"));
-        allStreamers = [];
-        querySnapshot.forEach((doc) => {
-            allStreamers.push({ id: doc.id, ...doc.data() });
-        });
-        renderStreamers(allStreamers);
-    } catch (error) {
-        console.error("Error fetching streamers:", error);
-        container.innerHTML = `<p style="color:red; text-align:center; grid-column:1/-1;">خطأ في الاتصال بقاعدة البيانات. تأكد من إعدادات Firebase.</p>`;
-    }
-}
-
-// 3. وظيفة رسم البطاقات في الـ HTML
 function renderStreamers(list) {
-    container.innerHTML = ''; // مسح رسالة التحميل
-
+    if(!container) return;
+    container.innerHTML = '';
     if (list.length === 0) {
-        container.innerHTML = '<p style="color:#888; text-align:center; grid-column:1/-1; padding:50px;">لا يوجد ستريمرز مضافين حالياً أو لا يوجد نتائج بحث..</p>';
+        container.innerHTML = '<p style="color:#888;text-align:center;grid-column:1/-1;padding:50px;">لا توجد بيانات حالياً.</p>';
         return;
     }
-
     list.forEach(s => {
         const catLabel = categoryNames[s.category] || s.category;
         const card = document.createElement('div');
@@ -91,47 +60,45 @@ function renderStreamers(list) {
                 <div class="card-inner">
                     <div class="card-front">
                         <div class="status-badge offline">OFFLINE</div>
-                        <img src="${s.image || 'https://via.placeholder.com/150'}" class="pfp">
+                        <img src="${s.image || ''}" class="pfp" onerror="this.src='https://via.placeholder.com/150'">
                         <div class="info">
                             <h3>${s.name}</h3>
-                            <p class="ic-name"><i class="fa-solid fa-id-card"></i> ${s.icName || 'غير معروف'}</p>
+                            <p><i class="fa-solid fa-id-card"></i> ${s.icName || '---'}</p>
                             <span class="category-tag">${catLabel}</span>
                         </div>
                     </div>
                     <div class="card-back">
                         <h3>${s.name}</h3>
-                        <p style="margin:15px 0;">هل تريد مشاهدة البث؟</p>
-                        <a href="https://kick.com/${s.username}" target="_blank" class="watch-btn">
-                            <i class="fa-solid fa-play"></i> انتقال للبث
-                        </a>
+                        <a href="https://kick.com/${s.username}" target="_blank" class="watch-btn">مشاهدة</a>
                     </div>
                 </div>
-            </div>
-        `;
+            </div>`;
         container.appendChild(card);
     });
 }
 
-// 4. نظام الفلترة (مربوط مع نافذة window ليراه ملف index.html)
-window.appFilter = (category) => {
-    if (category === 'all') {
+async function startApp() {
+    const isM = await checkMaintenance();
+    if (isM) return;
+    try {
+        const snap = await getDocs(collection(db, "streamers"));
+        allStreamers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         renderStreamers(allStreamers);
-    } else {
-        const filtered = allStreamers.filter(s => s.category === category);
-        renderStreamers(filtered);
-    }
+    } catch (e) { console.error(e); }
+}
+
+// ربط الفلترة بالنافذة العامة
+window.appFilter = (category) => {
+    const filtered = (category === 'all') ? allStreamers : allStreamers.filter(s => s.category === category);
+    renderStreamers(filtered);
 };
 
-// 5. نظام البحث (مربوط بحقل الإدخال)
+// نظام البحث
 document.getElementById('searchInput')?.addEventListener('input', (e) => {
     const term = e.target.value.toLowerCase();
-    const filtered = allStreamers.filter(s => 
-        s.name.toLowerCase().includes(term) || 
-        (s.icName && s.icName.toLowerCase().includes(term))
-    );
+    const filtered = allStreamers.filter(s => s.name.toLowerCase().includes(term) || (s.icName && s.icName.toLowerCase().includes(term)));
     renderStreamers(filtered);
 });
 
-// بدء التشغيل
-fetchStreamers();
+startApp();
 
