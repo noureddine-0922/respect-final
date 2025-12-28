@@ -12,72 +12,63 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-
 let allStreamers = [];
-let refreshSeconds = 15;
-let currentController = null; // لمنع تخبط الطلبات
+let timer = 15;
 
-async function fetchStatus(streamer) {
+async function getKickStatus(username) {
     try {
-        // إضافة بصمة متصفح عشوائية لتجنب كشف البوت
-        const response = await fetch(`/api?user=${streamer.username}&t=${Date.now()}`, {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        });
-        const data = await response.json();
-        
+        const res = await fetch(`/api?user=${username}&t=${Date.now()}`);
+        const data = await res.json();
         return {
-            isLive: data.livestream?.is_live === true,
+            live: data.livestream?.is_live || false,
             viewers: data.livestream?.viewer_count || 0,
             pfp: data.user?.profile_pic || null,
-            title: data.livestream?.session_title || "بث مباشر"
+            title: data.livestream?.session_title || "لا يوجد عنوان"
         };
-    } catch (e) { return null; }
+    } catch { return null; }
 }
 
-async function loadData() {
-    // إيقاف أي دورة تحديث سابقة لم تنتهِ بعد (منع التخبط)
-    if (currentController) currentController.abort();
-    currentController = new AbortController();
+async function syncAll() {
+    if (allStreamers.length === 0) {
+        const snap = await getDocs(collection(db, "streamers"));
+        allStreamers = snap.docs.map(doc => ({ ...doc.data(), live: false, viewers: 0 }));
+        render();
+    }
 
-    try {
-        if (allStreamers.length === 0) {
-            const snap = await getDocs(collection(db, "streamers"));
-            allStreamers = snap.docs.map(doc => ({ id: doc.id, ...doc.data(), isLive: false, viewers: 0 }));
-            renderUI();
-        }
-
-        // معالجة المجموعات لضمان عدم الحظر
-        const streamersToFetch = [...allStreamers];
-        for (let i = 0; i < streamersToFetch.length; i += 4) {
-            const batch = streamersToFetch.slice(i, i + 4);
-            await Promise.all(batch.map(async (s) => {
-                const status = await fetchStatus(s);
-                if (status) {
-                    const index = allStreamers.findIndex(item => item.username === s.username);
-                    if (index !== -1) {
-                        allStreamers[index] = { ...allStreamers[index], ...status };
-                        renderUI();
-                    }
-                }
-            }));
-            await new Promise(r => setTimeout(r, 600)); // فاصل بشري
-        }
-    } catch (err) { console.log("Update interrupted"); }
+    // جلب البيانات على دفعات (4 في كل مرة) لمنع التخبط
+    const list = [...allStreamers];
+    for (let i = 0; i < list.length; i += 4) {
+        const batch = list.slice(i, i + 4);
+        await Promise.all(batch.map(async (s) => {
+            const result = await getKickStatus(s.username);
+            if (result) {
+                const idx = allStreamers.findIndex(x => x.username === s.username);
+                allStreamers[idx] = { ...allStreamers[idx], ...result };
+                render(); // تحديث الواجهة فوراً
+            }
+        }));
+    }
 }
 
-function renderUI() {
+function render(filterList = null) {
     const container = document.getElementById('streamers-container');
-    if (!container) return;
-
-    const sorted = [...allStreamers].sort((a, b) => (b.isLive - a.isLive) || (b.viewers - a.viewers));
+    const displayList = filterList || allStreamers;
     
-    container.innerHTML = sorted.map(s => `
-        <div class="card ${s.isLive ? 'live' : 'offline'}">
-            <div class="badge">${s.isLive ? `🔴 مباشر | ${s.viewers}` : 'غير متصل'}</div>
-            <img src="${s.pfp || s.image || 'https://via.placeholder.com/150'}" class="pfp">
-            <h3>${s.name}</h3>
-            <p class="title">${s.isLive ? s.title : (s.icName || 'مواطن')}</p>
-            <a href="https://kick.com/${s.username}" target="_blank" class="btn">مشاهدة</a>
+    // الترتيب: لايف أولاً ثم عدد المشاهدين
+    displayList.sort((a,b) => (b.live - a.live) || (b.viewers - a.viewers));
+
+    container.innerHTML = displayList.map(s => `
+        <div class="card ${s.live ? 'is-live' : 'is-off'}">
+            <div class="status-tag">${s.live ? `<i class="fa-solid fa-circle"></i> مباشر` : 'أوفلاين'}</div>
+            <div class="pfp-box">
+                <img src="${s.pfp || s.image}" alt="${s.name}">
+                ${s.live ? `<div class="viewers-count"><i class="fa-solid fa-eye"></i> ${s.viewers}</div>` : ''}
+            </div>
+            <div class="info">
+                <h3>${s.name}</h3>
+                <p class="stream-title">${s.live ? s.title : (s.icName || 'مواطن')}</p>
+            </div>
+            <a href="https://kick.com/${s.username}" target="_blank" class="watch-link">مشاهدة القناة</a>
         </div>
     `).join('');
 
@@ -85,27 +76,23 @@ function renderUI() {
 }
 
 function updateStats() {
-    const live = allStreamers.filter(s => s.isLive);
+    const live = allStreamers.filter(s => s.live);
     document.getElementById('total-streamers').innerText = allStreamers.length;
     document.getElementById('live-count').innerText = live.length;
-    document.getElementById('total-viewers').innerText = live.reduce((a, b) => a + b.viewers, 0).toLocaleString();
+    document.getElementById('total-viewers').innerText = live.reduce((a,b) => a + b.viewers, 0);
 }
 
-window.appFilter = (cat) => {
-    const container = document.getElementById('streamers-container');
-    const filtered = cat === 'all' ? allStreamers : allStreamers.filter(s => s.category === cat);
-    // هنا نعيد رسم الفلتر فقط
-    container.innerHTML = filtered.map(s => `... نفس كود الكارد ...`).join('');
+window.runFilter = (cat) => {
+    if(cat === 'all') render();
+    else render(allStreamers.filter(s => s.category === cat));
 };
 
 setInterval(() => {
-    refreshSeconds--;
-    document.getElementById('refresh-clock').innerText = refreshSeconds;
-    if (refreshSeconds <= 0) {
-        refreshSeconds = 15;
-        loadData();
-    }
+    timer--;
+    document.getElementById('refresh-clock').innerText = timer;
+    document.getElementById('progress-fill').style.width = `${(timer/15)*100}%`;
+    if(timer <= 0) { timer = 15; syncAll(); }
 }, 1000);
 
-loadData();
+syncAll();
 

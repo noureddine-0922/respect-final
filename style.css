@@ -1,107 +1,125 @@
 :root {
-    --primary: #8a2be2; /* البنفسجي الملكي */
-    --bg: #0d0d0d;
-    --card: #1a1a1a;
-    --text: #ffffff;
+    --main-purp: #a855f7;
+    --dark-purp: #6b21a8;
+    --bg-black: #09090b;
+    --card-bg: #18181b;
+    --text-white: #fafafa;
 }
 
 body {
-    background-color: var(--bg);
-    color: var(--text);
+    background-color: var(--bg-black);
+    color: var(--text-white);
     font-family: 'Cairo', sans-serif;
     margin: 0;
+    direction: rtl;
 }
 
+/* هيدر خرافي */
 .main-header {
-    background: linear-gradient(to bottom, #1e0035, var(--bg));
-    padding: 40px 20px;
     text-align: center;
-    border-bottom: 3px solid var(--primary);
-}
-
-.sub-title {
-    color: #b194ff;
-    font-size: 0.9rem;
-    margin-top: -10px;
+    padding: 60px 20px;
+    background: radial-gradient(circle at top, #2e1065, var(--bg-black));
+    border-bottom: 1px solid #27272a;
 }
 
 .top-logo {
-    width: 90px;
+    width: 110px;
     border-radius: 50%;
-    border: 3px solid var(--primary);
-    box-shadow: 0 0 15px var(--primary);
+    border: 4px solid var(--main-purp);
+    box-shadow: 0 0 30px rgba(168, 85, 247, 0.4);
+    margin-bottom: 20px;
 }
 
-.stats-bar {
+h1 { font-weight: 900; font-size: 2.5rem; margin: 0; }
+.hero-desc { color: #a1a1aa; font-family: 'Tajawal', sans-serif; margin-bottom: 30px; }
+
+/* شبكة الإحصائيات */
+.stats-grid {
     display: flex;
     justify-content: center;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: #27272a;
+    padding: 15px 25px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
     gap: 15px;
-    margin-top: 20px;
 }
 
-.stat-item {
-    background: #252525;
-    padding: 8px 15px;
-    border-radius: 10px;
-    font-size: 0.85rem;
-}
+.stat-card i { font-size: 1.5rem; color: var(--main-purp); }
+.stat-card span { display: block; font-size: 1.4rem; font-weight: 900; }
+.stat-card label { font-size: 0.8rem; color: #a1a1aa; }
 
-.stat-item i { color: var(--primary); margin-left: 5px; }
+.live-glow { border: 1px solid var(--main-purp); box-shadow: 0 0 15px rgba(168, 85, 247, 0.2); }
 
-.app-layout { display: flex; padding: 20px; gap: 20px; max-width: 1400px; margin: auto; }
+/* العداد */
+.timer-wrapper { max-width: 300px; margin: auto; font-size: 0.8rem; color: #a1a1aa; }
+.progress-bar { height: 4px; background: #27272a; border-radius: 10px; margin-bottom: 8px; overflow: hidden; }
+#progress-fill { height: 100%; background: var(--main-purp); transition: 1s linear; }
 
-.sidebar { width: 250px; background: var(--card); padding: 20px; border-radius: 15px; }
+/* الهيكل */
+.app-container { display: flex; max-width: 1400px; margin: 40px auto; gap: 30px; padding: 0 20px; }
 
+/* سايد بار */
+.sidebar { width: 260px; }
+.sidebar h3 { font-size: 0.9rem; color: var(--main-purp); margin: 25px 0 10px; }
 .filter-btn {
-    width: 100%;
-    background: #333;
-    color: white;
-    border: none;
-    padding: 10px;
-    margin-bottom: 5px;
-    border-radius: 5px;
-    cursor: pointer;
-    text-align: right;
+    width: 100%; text-align: right; background: transparent; border: 1px solid #27272a;
+    color: var(--text-white); padding: 12px; border-radius: 10px; margin-bottom: 8px;
+    cursor: pointer; transition: 0.3s; font-family: 'Tajawal';
 }
+.filter-btn.active, .filter-btn:hover { background: var(--main-purp); border-color: var(--main-purp); }
 
-.filter-btn.active { background: var(--primary); }
-
-.grid-container { flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+/* البطاقة */
+.main-grid { flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
 
 .card {
-    background: var(--card);
-    border-radius: 15px;
-    padding: 20px;
-    text-align: center;
-    border: 1px solid #333;
-    transition: 0.3s;
+    background: var(--card-bg); border-radius: 20px; padding: 20px;
+    border: 1px solid #27272a; transition: 0.4s ease; position: relative;
 }
 
-.card.live { border-color: var(--primary); box-shadow: 0 0 10px rgba(138, 43, 226, 0.2); }
-
-.pfp { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; }
-
-.btn {
-    display: block;
-    background: var(--primary);
-    color: white;
-    text-decoration: none;
-    padding: 10px;
-    border-radius: 8px;
-    margin-top: 15px;
+/* تأثير التمرير (Hover) */
+.card:hover {
+    transform: translateY(-10px);
+    border-color: #22c55e; /* يتحول للأخضر عند التمرير */
+    box-shadow: 0 10px 30px rgba(34, 197, 94, 0.1);
 }
 
-.main-footer {
-    text-align: center;
-    padding: 20px;
-    background: #000;
-    color: #555;
-    font-size: 0.8rem;
-    margin-top: 50px;
+.status-tag { position: absolute; top: 15px; left: 15px; font-size: 0.7rem; font-weight: bold; padding: 4px 10px; border-radius: 10px; background: #000; }
+.is-live .status-tag { color: #22c55e; }
+.is-off .status-tag { color: #71717a; }
+
+.pfp-box { position: relative; width: 100px; height: 100px; margin: 10px auto 20px; }
+.pfp-box img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid #27272a; }
+.is-live img { border-color: var(--main-purp); }
+
+.viewers-count {
+    position: absolute; bottom: -5px; right: -5px; background: #ef4444;
+    padding: 2px 8px; border-radius: 5px; font-size: 0.7rem; font-weight: bold;
 }
 
-@media (max-width: 768px) {
-    .app-layout { flex-direction: column-reverse; }
-    .sidebar { width: 100%; }
+.info h3 { margin: 0; font-size: 1.3rem; text-align: center; }
+.stream-title { color: #a1a1aa; font-size: 0.85rem; text-align: center; margin: 10px 0 20px; height: 40px; overflow: hidden; }
+
+.watch-link {
+    display: block; text-align: center; background: #27272a; color: white;
+    text-decoration: none; padding: 12px; border-radius: 12px; font-weight: bold; transition: 0.3s;
+}
+.is-live .watch-link { background: var(--main-purp); }
+.is-live .watch-link:hover { background: var(--dark-purp); }
+
+/* الفوتر */
+.footer { text-align: center; padding: 40px; border-top: 1px solid #27272a; margin-top: 60px; font-size: 0.9rem; color: #a1a1aa; }
+.purp { color: var(--main-purp); font-weight: bold; }
+
+@media (max-width: 900px) {
+    .app-container { flex-direction: column; }
+    .sidebar { width: 100%; display: flex; overflow-x: auto; gap: 10px; padding-bottom: 10px; }
+    .sidebar h3 { display: none; }
+    .filter-btn { white-space: nowrap; width: auto; }
 }
 
