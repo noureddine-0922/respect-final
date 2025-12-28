@@ -1,7 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// إعدادات Firebase الخاصة بمشروع ريسبكت
 const firebaseConfig = {
     apiKey: "AIzaSyBjEc-wdY6s6v0AiVg4texFrohLwDcdaiU",
     authDomain: "respect-db-d1320.firebaseapp.com",
@@ -16,93 +15,96 @@ const db = getFirestore(app);
 
 let allStreamers = [];
 let refreshSeconds = 30;
+let cycleCount = 0; // لعد الدورات وتطبيق التحديث الذكي
 
-/**
- * جلب حالة الستريمر من Cloudflare مباشرة (Native Sync)
- * نستخدم t=Date.now لضمان جلب الحالة الحقيقية من كيك
- */
 async function getKickStatus(username) {
     try {
         const response = await fetch(`/api?user=${username}&t=${Date.now()}`);
-        if (!response.ok) throw new Error('Cloudflare Error');
+        if (!response.ok) return { isLive: false, viewers: 0, pfp: null };
         const data = await response.json();
-        
         return {
             isLive: data.livestream !== null && data.livestream.is_live === true,
             viewers: data.livestream ? data.livestream.viewer_count : 0,
-            pfp: data.user ? data.user.profile_pic : null
+            pfp: data.user?.profile_pic || null
         };
     } catch (e) {
-        console.error(`خطأ في جلب حالة ${username}:`, e);
         return { isLive: false, viewers: 0, pfp: null };
     }
 }
 
-/**
- * تحميل البيانات: تعرض البطاقات فوراً ثم تحدث الحالات تدريجياً
- */
-async function loadData() {
-    try {
-        // 1. جلب القائمة من Firebase وعرضها فوراً (بدون انتظار) لضمان السرعة
-        const querySnapshot = await getDocs(collection(db, "streamers"));
-        allStreamers = querySnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-            isLive: false, // قيمة مبدئية
-            viewers: 0
-        }));
-
-        // عرض البطاقات الـ 11 فوراً
-        renderStreamers(allStreamers);
-        updateStats();
-
-        // 2. تحديث حالات البث في الخلفية عبر Cloudflare لكل ستريمر بشكل منفصل
-        // هذا يمنع التذبذب لأن كل بطاقة تتحدث فقط عندما تصل بياناتها الحقيقية
-        allStreamers.forEach(async (streamer, index) => {
+// دالة المعالجة على دفعات (Chunking)
+async function processInChunks(array, chunkSize) {
+    for (let i = 0; i < array.length; i += chunkSize) {
+        const chunk = array.slice(i, i + chunkSize);
+        await Promise.all(chunk.map(async (streamer) => {
+            // تحديث ذكي: إذا كان offline، نفحصه فقط كل دورتين
+            if (!streamer.isLive && cycleCount % 2 !== 0) {
+                return; // تخطي الفحص في هذه الدورة
+            }
+            
             const status = await getKickStatus(streamer.username);
-            
-            // تحديث بيانات الستريمر في المصفوفة الأساسية
-            allStreamers[index] = { ...streamer, ...status };
-
-            // ترتيب المصفوفة (المباشر أولاً) وتحديث الواجهة تدريجياً
-            allStreamers.sort((a, b) => (b.isLive - a.isLive) || (b.viewers - a.viewers));
-            
-            renderStreamers(allStreamers);
-            updateStats();
-        });
-
-    } catch (error) {
-        console.error("Firebase Connection Error:", error);
+            const index = allStreamers.findIndex(s => s.username === streamer.username);
+            if (index !== -1) {
+                allStreamers[index] = { ...allStreamers[index], ...status };
+                // تحديث الواجهة فوراً عند كل نتيجة
+                updateUI();
+            }
+        }));
     }
 }
 
-/**
- * دالة عرض البطاقات في الحاوية (Grid-3)
- */
+async function loadData() {
+    try {
+        // جلب البيانات لأول مرة فقط أو إذا كانت القائمة فارغة
+        if (allStreamers.length === 0) {
+            const querySnapshot = await getDocs(collection(db, "streamers"));
+            allStreamers = querySnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+                isLive: false,
+                viewers: 0
+            }));
+            updateUI();
+        }
+
+        cycleCount++;
+
+        // إعطاء الأولوية للستريمرز الـ Live حالياً
+        const liveOnes = allStreamers.filter(s => s.isLive);
+        const offlineOnes = allStreamers.filter(s => !s.isLive);
+        const sortedQueue = [...liveOnes, ...offlineOnes];
+
+        // بدء الجلب المتسلسل (5 طلبات في كل دفعة)
+        await processInChunks(sortedQueue, 5);
+
+    } catch (error) {
+        console.error("Error:", error);
+    }
+}
+
+function updateUI() {
+    // ترتيب: مباشر أولاً ثم حسب عدد المشاهدين
+    allStreamers.sort((a, b) => (b.isLive - a.isLive) || (b.viewers - a.viewers));
+    renderStreamers(allStreamers);
+    updateStats();
+}
+
 function renderStreamers(list) {
     const container = document.getElementById('streamers-container');
     if (!container) return;
-    
     container.innerHTML = list.map(s => `
         <div class="card ${s.isLive ? 'border-live' : ''}">
             <div class="status-tag ${s.isLive ? 'bg-live' : 'bg-off'}">
                 ${s.isLive ? `<span class="pulse-dot"></span> مباشر | ${s.viewers}` : 'غير متصل'}
             </div>
-            <img src="${s.pfp || s.image || 'https://via.placeholder.com/150'}" class="pfp" alt="${s.name}">
-            <div class="info">
-                <h3>${s.name}</h3>
-                <p><i class="fa-solid fa-id-card"></i> ${s.icName || 'بدون اسم'}</p>
-            </div>
-            <a href="https://kick.com/${s.username}" target="_blank" class="kick-link">
-                ${s.isLive ? 'مشاهدة البث' : 'قناة الستريمر'}
-            </a>
+            <img src="${s.pfp || s.image || 'https://via.placeholder.com/150'}" class="pfp">
+            <h3>${s.name}</h3>
+            <p><i class="fa-solid fa-id-card"></i> ${s.icName || 'بدون اسم'}</p>
+            <a href="https://kick.com/${s.username}" target="_blank" class="kick-link">قناة الستريمر</a>
         </div>
     `).join('');
 }
 
-/**
- * تحديث شريط الإحصائيات العلوي
- */
 function updateStats() {
     const liveItems = allStreamers.filter(s => s.isLive);
     document.getElementById('total-streamers').innerText = allStreamers.length;
@@ -110,38 +112,18 @@ function updateStats() {
     document.getElementById('total-viewers').innerText = liveItems.reduce((acc, s) => acc + s.viewers, 0);
 }
 
-/**
- * نظام العد التنازلي للتحديث التلقائي
- */
 function startCountdown() {
     const timerElement = document.getElementById('refresh-clock');
     setInterval(() => {
         refreshSeconds--;
         if (timerElement) timerElement.innerText = refreshSeconds;
-        
         if (refreshSeconds <= 0) {
             refreshSeconds = 30;
-            loadData(); // إعادة تشغيل دورة التحديث
+            loadData();
         }
     }, 1000);
 }
 
-// نظام البحث اللحظي
-document.getElementById('searchInput')?.addEventListener('input', (e) => {
-    const term = e.target.value.toLowerCase();
-    const filtered = allStreamers.filter(s => 
-        s.name.toLowerCase().includes(term) || (s.icName && s.icName.toLowerCase().includes(term))
-    );
-    renderStreamers(filtered);
-});
-
-// نظام فلترة الفئات (Sidebar)
-window.appFilter = (category) => {
-    const filtered = category === 'all' ? allStreamers : allStreamers.filter(s => s.category === category);
-    renderStreamers(filtered);
-};
-
-// تشغيل التطبيق
 loadData();
 startCountdown();
 
