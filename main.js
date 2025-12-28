@@ -1,6 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+// إعدادات Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyBjEc-wdY6s6v0AiVg4texFrohLwDcdaiU",
     authDomain: "respect-db-d1320.firebaseapp.com",
@@ -13,11 +14,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 let allStreamers = [];
+let refreshSeconds = 15; // تقليل الوقت لـ 15 ثانية لسرعة أكبر
 
-// وظيفة جلب الحالة (معدلة لتكون أسرع ما يمكن)
+// دالة جلب الحالة الفردية (طلقة سريعة عبر Cloudflare)
 async function fetchStatus(streamer) {
     try {
-        // إضافة t=Date.now تمنع الكاش نهائياً
         const response = await fetch(`/api?user=${streamer.username}&t=${Date.now()}`);
         const data = await response.json();
         
@@ -30,34 +31,38 @@ async function fetchStatus(streamer) {
         const idx = allStreamers.findIndex(s => s.username === streamer.username);
         if (idx !== -1) {
             allStreamers[idx] = { ...allStreamers[idx], ...status };
-            // تحديث الواجهة فوراً بمجرد وصول بيانات هذا الستريمر
-            refreshUI();
+            updateUI(); // تحديث الواجهة فوراً عند وصول كل نتيجة
         }
     } catch (e) {
-        console.error("Fetch Error:", streamer.username);
+        console.error("خطأ في جلب بيانات:", streamer.username);
     }
 }
 
+// الدالة الرئيسية لجلب البيانات
 async function loadData() {
     try {
-        // إذا كانت القائمة فارغة (أول مرة)، نجلبها من Firebase
+        // إذا كانت القائمة فارغة، نجلبها من Firebase أولاً
         if (allStreamers.length === 0) {
             const snap = await getDocs(collection(db, "streamers"));
-            allStreamers = snap.docs.map(doc => ({ id: doc.id, ...doc.data(), isLive: false, viewers: 0 }));
-            refreshUI(); // عرض البطاقات فوراً
+            allStreamers = snap.docs.map(doc => ({ 
+                id: doc.id, 
+                ...doc.data(), 
+                isLive: false, 
+                viewers: 0 
+            }));
+            updateUI(); 
         }
 
-        // إطلاق جميع الطلبات "بالتوازي" فوراً
-        // Promise.all تجعل الطلبات تنطلق معاً كطلقة واحدة
-        await Promise.all(allStreamers.map(s => fetchStatus(s)));
+        // إطلاق جميع الطلبات "بالتوازي" في نفس اللحظة (بدون انتظار متسلسل)
+        allStreamers.forEach(s => fetchStatus(s));
         
     } catch (err) {
-        console.error("Load Error:", err);
+        console.error("فشل التحميل:", err);
     }
 }
 
-function refreshUI() {
-    // ترتيب ذكي: البث المباشر في الأعلى دائماً
+function updateUI() {
+    // الترتيب: المباشر أولاً ثم الأعلى مشاهدة
     allStreamers.sort((a, b) => (b.isLive - a.isLive) || (b.viewers - a.viewers));
     renderCards(allStreamers);
     
@@ -84,7 +89,21 @@ function renderCards(list) {
     `).join('');
 }
 
-// تشغيل النظام: جلب فوري ثم تحديث كل 20 ثانية
+// نظام العداد التنازلي الجديد (15 ثانية)
+function startTimer() {
+    const clock = document.getElementById('refresh-clock');
+    setInterval(() => {
+        refreshSeconds--;
+        if (clock) clock.innerText = refreshSeconds;
+        
+        if (refreshSeconds <= 0) {
+            refreshSeconds = 15;
+            loadData();
+        }
+    }, 1000);
+}
+
+// التشغيل الفوري
 loadData(); 
-setInterval(loadData, 20000); 
+startTimer();
 
