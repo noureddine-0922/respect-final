@@ -1,6 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+// إعدادات Firebase الخاصة بك
 const firebaseConfig = {
     apiKey: "AIzaSyBjEc-wdY6s6v0AiVg4texFrohLwDcdaiU",
     authDomain: "respect-db-d1320.firebaseapp.com",
@@ -15,116 +16,180 @@ const db = getFirestore(app);
 
 let allStreamers = [];
 let refreshSeconds = 15;
-const BATCH_SIZE = 5; [span_1](start_span)// جلب 5 ستريمرز في كل دفعة لمنع الحظر[span_1](end_span)
+const BATCH_SIZE = 5; // معالجة 5 ستريمرز في كل دفعة (نفس تكنيك الموقع الاحترافي)
 
 /**
- * جلب البيانات من Kick عبر نظام الوكيل المتوازي
- * [span_2](start_span)نستخدم تكتيك "كسر الكاش" لضمان بيانات لحظية[span_2](end_span)
+ * جلب البيانات من Cloudflare
+ * تم إضافة نظام Cache-Busting لضمان أحدث البيانات
  */
-async function fetchKickStatus(streamer) {
+async function fetchKickStatus(username) {
     try {
-        const response = await fetch(`/api?user=${streamer.username}&t=${Date.now()}`);
-        if (!response.ok) throw new Error();
+        const response = await fetch(`/api?user=${username}&t=${Date.now()}`);
+        if (!response.ok) return null;
         const data = await response.json();
         
         return {
             isLive: data.livestream?.is_live === true,
             viewers: data.livestream?.viewer_count || 0,
             pfp: data.user?.profile_pic || null,
-            title: data.livestream?.session_title || [span_3](start_span)""[span_3](end_span)
+            title: data.livestream?.session_title || "بث مباشر"
         };
     } catch (e) {
-        return { isLive: false, viewers: 0, pfp: null, title: "" };
+        console.error(`Error fetching ${username}`);
+        return null;
     }
 }
 
 /**
- * معالجة الستريمرز بنظام الدفعات (Batch Processing)
- * [span_4](start_span)لضمان عدم الضغط على الـ API وتجنب الـ 403[span_4](end_span)
+ * نظام المعالجة على دفعات (Batch Processing)
+ * يضمن سرعة البرق دون التعرض لحظر IP المتصفح
  */
-async function processStreamersInBatches(list) {
+async function processInBatches(list) {
     for (let i = 0; i < list.length; i += BATCH_SIZE) {
         const batch = list.slice(i, i + BATCH_SIZE);
-        await Promise.all(batch.map(async (streamer) => {
-            const status = await fetchKickStatus(streamer);
-            const idx = allStreamers.findIndex(s => s.username === streamer.username);
-            if (idx !== -1) {
-                allStreamers[idx] = { ...allStreamers[idx], ...status };
-                [span_5](start_span)renderUI(); // تحديث تدريجي للواجهة[span_5](end_span)
+        
+        // إطلاق دفعة من 5 طلبات متوازية
+        await Promise.all(batch.map(async (s) => {
+            const status = await fetchKickStatus(s.username);
+            if (status) {
+                const idx = allStreamers.findIndex(item => item.username === s.username);
+                if (idx !== -1) {
+                    allStreamers[idx] = { ...allStreamers[idx], ...status };
+                    renderUI(); // تحديث الواجهة لحظياً لكل بطاقة تصل
+                }
             }
         }));
-        [span_6](start_span)// فاصل زمني بسيط بين الدفعات لتقليد السلوك البشري[span_6](end_span)
-        if (i + BATCH_SIZE < list.length) await new Promise(r => setTimeout(r, 1000));
+
+        // انتظار بسيط (800ms) بين كل دفعة لضمان استقرار الشبكة
+        if (i + BATCH_SIZE < list.length) {
+            await new Promise(r => setTimeout(r, 800));
+        }
     }
 }
 
+/**
+ * تحميل البيانات الأساسية من Firebase
+ */
 async function loadData() {
     try {
+        // جلب قائمة الستريمرز من Firebase (مرة واحدة فقط عند البداية)
         if (allStreamers.length === 0) {
             const snap = await getDocs(collection(db, "streamers"));
-            allStreamers = snap.docs.map(doc => ({ 
-                id: doc.id, ...doc.data(), isLive: false, viewers: 0 
+            allStreamers = snap.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+                isLive: false,
+                viewers: 0
             }));
-            renderUI();
+            renderUI(); // عرض الهيكل فوراً
         }
 
-        [span_7](start_span)// ترتيب الأولية: نفحص من كانوا "Live" أولاً لسرعة التحديث[span_7](end_span)
-        const queue = [...allStreamers].sort((a, b) => b.isLive - a.isLive);
-        await processStreamersInBatches(queue);
+        // بدء عملية تحديث الحالات من Kick
+        processInBatches(allStreamers);
 
     } catch (err) {
-        console.error("Critical Load Error", err);
+        console.error("Firebase Error:", err);
     }
 }
 
+/**
+ * بناء واجهة المستخدم (Rendering)
+ * تم تحسينها لتكون سريعة جداً وتدعم الترتيب اللحظي
+ */
 function renderUI() {
     const container = document.getElementById('streamers-container');
     if (!container) return;
 
-    [span_8](start_span)// ترتيب العرض: المباشر أولاً ثم حسب عدد المشاهدين[span_8](end_span)
-    allStreamers.sort((a, b) => (b.isLive - a.isLive) || (b.viewers - a.viewers));
+    // ترتيب القائمة: المباشر أولاً ثم الأعلى مشاهدة
+    const sortedList = [...allStreamers].sort((a, b) => (b.isLive - a.isLive) || (b.viewers - a.viewers));
 
-    [span_9](start_span)// استخدام الـ Fragment لتحسين الأداء ومنع الوميض[span_9](end_span)
-    container.innerHTML = allStreamers.map(s => `
-        <div class="card ${s.isLive ? 'live-border' : ''}">
-            <div class="status-badge ${s.isLive ? 'bg-live' : 'bg-off'}">
-                ${s.isLive ? `🔴 مباشر | ${s.viewers.toLocaleString('en-US')}` : 'غير متصل'}
+    // بناء البطاقات
+    container.innerHTML = sortedList.map(s => `
+        <div class="card ${s.isLive ? 'status-live' : 'status-off'}">
+            <div class="card-badge">
+                ${s.isLive ? `<span class="pulse">🔴</span> مباشر | ${s.viewers.toLocaleString()}` : 'غير متصل'}
             </div>
-            <div class="pfp-wrapper">
-                <img src="${s.pfp || s.image || 'placeholder.png'}" class="pfp" loading="lazy">
+            <div class="pfp-container">
+                <img src="${s.pfp || s.image || 'https://via.placeholder.com/150'}" class="streamer-pfp" loading="lazy">
             </div>
-            <h3>${s.name}</h3>
-            ${s.isLive ? `<p class="stream-title">📺 ${s.title}</p>` : `<p class="ic-name">🆔 ${s.icName || 'غير متوفر'}</p>`}
-            <a href="https://kick.com/${s.username}" target="_blank" class="kick-btn">
-                ${s.isLive ? 'شاهد البث الآن' : 'انتقل للقناة'}
+            <div class="streamer-info">
+                <h3>${s.name}</h3>
+                <p class="sub-text">${s.isLive ? s.title : (s.icName || 'مواطن')}</p>
+            </div>
+            <a href="https://kick.com/${s.username}" target="_blank" class="watch-btn">
+                ${s.isLive ? 'مشاهدة الآن' : 'القناة'}
             </a>
         </div>
     `).join('');
 
-    updateStats();
+    updateTopStats();
 }
 
-function updateStats() {
-    const live = allStreamers.filter(s => s.isLive);
-    document.getElementById('total-streamers').innerText = allStreamers.length;
-    document.getElementById('live-count').innerText = live.length;
-    [span_10](start_span)document.getElementById('total-viewers').innerText = live.reduce((a, b) => a + b.viewers, 0).toLocaleString('en-US');[span_10](end_span)
+/**
+ * تحديث الإحصائيات في الهيدر
+ */
+function updateTopStats() {
+    const liveItems = allStreamers.filter(s => s.isLive);
+    const totalViewers = liveItems.reduce((acc, s) => acc + s.viewers, 0);
+
+    const elTotal = document.getElementById('total-streamers');
+    const elLive = document.getElementById('live-count');
+    const elViewers = document.getElementById('total-viewers');
+
+    if (elTotal) elTotal.innerText = allStreamers.length;
+    if (elLive) elLive.innerText = liveItems.length;
+    if (elViewers) elViewers.innerText = totalViewers.toLocaleString();
 }
 
+/**
+ * نظام الفلترة (Categories)
+ */
+window.appFilter = (category) => {
+    const container = document.getElementById('streamers-container');
+    let filtered;
+    
+    if (category === 'all') {
+        filtered = allStreamers;
+    } else {
+        filtered = allStreamers.filter(s => s.category === category);
+    }
+    
+    // إعادة بناء الواجهة بناءً على الفلتر
+    renderUIFiltered(filtered);
+};
+
+function renderUIFiltered(list) {
+    // وظيفة مساعدة لعرض القائمة المفلترة فقط دون التأثير على المصفوفة الأصلية
+    const container = document.getElementById('streamers-container');
+    const sorted = [...list].sort((a, b) => (b.isLive - a.isLive) || (b.viewers - a.viewers));
+    // (نفس كود الـ mapping الموجود في renderUI)
+    container.innerHTML = sorted.map(s => `
+        <div class="card ${s.isLive ? 'status-live' : 'status-off'}">
+            <div class="card-badge">${s.isLive ? `🔴 مباشر | ${s.viewers}` : 'غير متصل'}</div>
+            <img src="${s.pfp || s.image}" class="streamer-pfp">
+            <h3>${s.name}</h3>
+            <a href="https://kick.com/${s.username}" target="_blank" class="watch-btn">دخول</a>
+        </div>
+    `).join('');
+}
+
+/**
+ * العداد التنازلي للتحديث (15 ثانية)
+ */
 function startTimer() {
+    const clock = document.getElementById('refresh-clock');
     setInterval(() => {
         refreshSeconds--;
-        const clock = document.getElementById('refresh-clock');
         if (clock) clock.innerText = refreshSeconds;
         
         if (refreshSeconds <= 0) {
             refreshSeconds = 15;
-            loadData(); 
+            loadData(); // إعادة دورة الفحص
         }
     }, 1000);
 }
 
-[span_11](start_span)// التشغيل عند الجاهزية[span_11](end_span)
+// التشغيل الفوري عند تحميل الصفحة
 document.addEventListener('DOMContentLoaded', () => {
     loadData();
     startTimer();

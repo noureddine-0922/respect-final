@@ -3,102 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ريسبكت ستريمرز | Respect Streams</title>
+    <title>ريسبكت ستريمرز | Respect Streamers</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <header class="main-header">
-        <div class="logo-wrapper">
-            <img src="https://files.kick.com/images/user/5710904/profile_image/conversion/41b5d19a-bbe0-4b9a-8004-cc9c6052f812-fullsize.webp" 
-                 alt="Respect Logo" class="top-logo" 
-                 onerror="this.src='https://via.placeholder.com/100?text=Respect'">
+        <div class="logo-area">
+            <img src="https://files.kick.com/images/user/5710904/profile_image/conversion/41b5d19a-bbe0-4b9a-8004-cc9c6052f812-fullsize.webp" alt="Respect Logo" class="top-logo">
         </div>
         
-        <h1>ريسبكت ستريمرز</h1>
-        <p>المنصة الرسمية لمتابعة حالة بثوث مجتمع ريسبكت</p>
-        
-        <div class="stats-bar">
-            <div class="stat-item">الستريمرز: <span id="total-streamers">0</span></div>
-            <div class="stat-item">مباشر الآن: <span id="live-count" style="color:var(--neon-green)">0</span></div>
-            <div class="stat-item">المشاهدات: <span id="total-viewers">0</span></div>
-        </div>
-
-        <div class="refresh-timer">
-            <i class="fa-solid fa-sync fa-spin"></i> سيتم التحقق من الحالات خلال: <span id="refresh-clock">30</span> ثانية
-        </div>
-
-        <div class="search-container">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="searchInput" placeholder="ابحث عن اسم الستريمر أو الشخصية...">
+        <div class="header-info">
+            <h1>ريسبكت ستريمرز</h1>
+            <div class="stats-bar">
+                <div class="stat-item">العدد الكلي: <span id="total-streamers">0</span></div>
+                <div class="stat-item">بث مباشر: <span id="live-count">0</span></div>
+                <div class="stat-item">المشاهدات: <span id="total-viewers">0</span></div>
+            </div>
+            <div class="refresh-status">
+                <i class="fa-solid fa-spinner fa-spin"></i> تحديث تلقائي خلال: <span id="refresh-clock">15</span> ثانية
+            </div>
         </div>
     </header>
 
-    <div class="app-layout">
-        
-        <main class="content-area">
-            <div id="streamers-container" class="grid-3">
-                <div class="loading-msg" style="grid-column: 1/-1; text-align: center; padding: 50px;">
-                    <i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; color: var(--neon-green);"></i>
-                    <p>جاري تحميل قائمة الستريمرز...</p>
-                </div>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="filter-group">
+                <h3><i class="fa-solid fa-layer-group"></i> الأقسام</h3>
+                <button class="filter-btn active" onclick="filterData('all')">
+                    <i class="fa-solid fa-house"></i> الكل
+                </button>
             </div>
-        </main>
 
-        <aside class="right-sidebar">
-            <h3><i class="fa-solid fa-filter"></i> تصفية حسب الفئة</h3>
-            
-            <button class="filter-btn active" onclick="filterData('all')">
-                <i class="fa-solid fa-border-all"></i> جميع الستريمرز
-            </button>
-            
-            <div class="side-group">
-                <span><i class="fa-solid fa-shield-halved"></i> الجهات الحكومية</span>
+            <div class="filter-group">
+                <span class="label">الجهات الحكومية</span>
                 <button class="filter-btn" onclick="filterData('police')">الشرطة</button>
                 <button class="filter-btn" onclick="filterData('ems')">الإسعاف</button>
-                <button class="filter-btn" onclick="filterData('justice')">وزارة العدل</button>
             </div>
 
-            <div class="side-group">
-                <span><i class="fa-solid fa-mask"></i> العصابات والمنظمات</span>
-                <button class="filter-btn" onclick="filterData('criminal')">مجرم</button>
+            <div class="filter-group">
+                <span class="label">العصابات والعوائل</span>
                 <button class="filter-btn" onclick="filterData('obeid')">عائلة عبيد</button>
-                <button class="filter-btn" onclick="filterData('plus')">عصابة البلس</button>
-                <button class="filter-btn" onclick="filterData('brazil')">البرازيليين</button>
-                <button class="filter-btn" onclick="filterData('east')">عصابة الشرق</button>
-                <button class="filter-btn" onclick="filterData('west')">عصابة الغرب</button>
-                <button class="filter-btn" onclick="filterData('yakuza')">الياكوزا</button>
+                <button class="filter-btn" onclick="filterData('criminal')">مجرمين</button>
+                <button class="filter-btn" onclick="filterData('plus')">البلس</button>
             </div>
         </aside>
 
+        <main class="main-content">
+            <div id="streamers-container" class="grid-container">
+                <div class="loading-overlay">
+                    <i class="fa-solid fa-wifi fa-fade fa-3x"></i>
+                    <p>جاري جلب حالات البث مباشرة من Kick...</p>
+                </div>
+            </div>
+        </main>
     </div>
-
-    <footer class="main-footer">
-        <p>جميع الحقوق محفوظة لمجتمع ريسبكت &copy; 2026</p>
-    </footer>
 
     <script type="module" src="main.js"></script>
 
     <script>
-        window.filterData = (category) => {
+        function filterData(category) {
+            // التأكد من استدعاء الدالة البرمجية داخل main.js
             if (window.appFilter) {
                 window.appFilter(category);
-                
-                // تحديث مظهر الأزرار
-                document.querySelectorAll('.filter-btn').forEach(btn => {
-                    btn.classList.remove('active');
-                });
-                
-                // إضافة الكلاس النشط للزر الذي تم ضغطه
-                if (event) {
-                    event.currentTarget.classList.add('active');
-                }
             }
-        };
+            
+            // تغيير شكل الزر النشط
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+        }
     </script>
 </body>
 </html>
