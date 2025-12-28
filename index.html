@@ -18,43 +18,19 @@
         <p class="hero-desc">أول منصة تجمع حالة ستريمرز ريسبكت لحظة بلحظة</p>
         
         <div class="stats-grid">
-            <div class="stat-card">
-                <i class="fa-solid fa-users-viewfinder"></i>
-                <div class="stat-info">
-                    <span id="total-streamers">0</span>
-                    <label>الستريمرز</label>
-                </div>
-            </div>
-            <div class="stat-card live-glow">
-                <i class="fa-solid fa-satellite-dish fa-beat"></i>
-                <div class="stat-info">
-                    <span id="live-count">0</span>
-                    <label>بث مباشر</label>
-                </div>
-            </div>
-            <div class="stat-card">
-                <i class="fa-solid fa-eye"></i>
-                <div class="stat-info">
-                    <span id="total-viewers">0</span>
-                    <label>مشاهدات الجميع</label>
-                </div>
-            </div>
-        </div>
-
-        <div class="timer-wrapper">
-            <div class="progress-bar"><div id="progress-fill"></div></div>
-            <p>سيتم التحديث التلقائي خلال <span id="refresh-clock">15</span> ثانية</p>
+            <div class="stat-card"><i class="fa-solid fa-users"></i> <div class="s-info"><span id="total-streamers">0</span><label>الستريمرز</label></div></div>
+            <div class="stat-card live-glow"><i class="fa-solid fa-tower-broadcast fa-beat"></i> <div class="s-info"><span id="live-count">0</span><label>يبث الآن</label></div></div>
+            <div class="stat-card"><i class="fa-solid fa-eye"></i> <div class="s-info"><span id="total-viewers">0</span><label>المشاهدات</label></div></div>
         </div>
     </header>
 
     <div class="app-container">
         <aside class="sidebar">
-            <h3><i class="fa-solid fa-handcuffs"></i> الجهات</h3>
             <button class="filter-btn active" onclick="filterData('all')">الكل</button>
+            <div class="side-sect">الجهات</div>
             <button class="filter-btn" onclick="filterData('police')">الشرطة</button>
             <button class="filter-btn" onclick="filterData('ems')">الإسعاف</button>
-
-            <h3><i class="fa-solid fa-skull-crossbones"></i> العصابات</h3>
+            <div class="side-sect">العصابات</div>
             <button class="filter-btn" onclick="filterData('yakuza')">الياكوزا</button>
             <button class="filter-btn" onclick="filterData('crypto')">Crypto</button>
             <button class="filter-btn" onclick="filterData('middle')">Middle Gang</button>
