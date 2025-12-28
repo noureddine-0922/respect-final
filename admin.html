@@ -17,100 +17,116 @@
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #0d1117; z-index: 9999; display: flex;
             flex-direction: column; justify-content: center; align-items: center;
+            background-image: radial-gradient(circle at center, #161b22 0%, #0d1117 100%);
         }
-        .login-box {
-            background: #161b22; padding: 40px; border-radius: 20px; text-align: center;
-            border: 1px solid #30363d; box-shadow: 0 0 30px rgba(0,0,0,0.5);
-        }
-        .google-btn {
-            background: white; color: black; border: none; padding: 10px 20px;
-            border-radius: 5px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 10px;
-            margin-top: 20px; transition: 0.3s;
-        }
-        .google-btn:hover { background: #ddd; }
 
-        /* التصميم الرئيسي */
-        .dashboard-container { display: flex; min-height: 100vh; display: none; /* مخفي حتى الدخول */ }
-        
-        /* القائمة الجانبية */
-        .sidebar-admin {
-            width: 250px; background: #161b22; padding: 20px; border-left: 1px solid #30363d;
-            display: flex; flex-direction: column;
+        /* أنيميشن النص "ONLY ADMIN" */
+        .admin-title {
+            font-size: 4rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            font-family: 'Arial', sans-serif; /* خط عريض */
+            letter-spacing: 5px;
+            margin-bottom: 30px;
+            background: linear-gradient(90deg, #ff0000, #ff00cc, #3333ff, #00ccff, #ff0000);
+            background-size: 400%;
+            -webkit-background-clip: text;
+            color: transparent;
+            animation: animateGradient 5s linear infinite;
+            text-shadow: 0 0 20px rgba(255, 0, 204, 0.5);
+            position: relative;
         }
-        .user-profile {
-            text-align: center; padding-bottom: 20px; border-bottom: 1px solid #30363d; margin-bottom: 20px;
+
+        .admin-title::after {
+            content: 'ONLY ADMIN';
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: inherit;
+            -webkit-background-clip: text;
+            color: transparent;
+            filter: blur(20px);
+            opacity: 0.7;
+            z-index: -1;
+            animation: animateGradient 5s linear infinite;
         }
+
+        @keyframes animateGradient {
+            0% { background-position: 0%; }
+            100% { background-position: 400%; }
+        }
+
+        .login-box {
+            background: rgba(22, 27, 34, 0.8); /* خلفية نصف شفافة */
+            backdrop-filter: blur(10px); /* تأثير الزجاج */
+            padding: 40px; border-radius: 20px; text-align: center;
+            border: 1px solid rgba(48, 54, 61, 0.5); 
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            max-width: 400px; width: 90%;
+            animation: floatBox 3s ease-in-out infinite;
+        }
+
+        @keyframes floatBox {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .google-btn {
+            background: white; color: black; border: none; padding: 12px 25px;
+            border-radius: 30px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 10px;
+            margin-top: 25px; transition: 0.3s; width: 100%; justify-content: center;
+            font-size: 1.1rem;
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.2);
+        }
+        .google-btn:hover { 
+            background: #f0f0f0; 
+            transform: scale(1.05);
+            box-shadow: 0 5px 25px rgba(255, 255, 255, 0.4);
+        }
+
+        /* باقي التنسيقات (اللوحة) */
+        .dashboard-container { display: flex; min-height: 100vh; display: none; }
+        .sidebar-admin { width: 250px; background: #161b22; padding: 20px; border-left: 1px solid #30363d; display: flex; flex-direction: column; }
+        .user-profile { text-align: center; padding-bottom: 20px; border-bottom: 1px solid #30363d; margin-bottom: 20px; }
         .user-avatar { width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--neon-green); margin-bottom: 10px; }
-        .role-badge { 
-            padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold;
-        }
+        .role-badge { padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
         .role-owner { background: #da3633; color: white; }
         .role-admin { background: #1f6feb; color: white; }
-
-        .nav-btn {
-            background: none; border: none; color: #8b949e; padding: 15px; text-align: right;
-            cursor: pointer; font-family: 'Cairo'; font-size: 1rem; border-radius: 8px; transition: 0.3s;
-            display: flex; align-items: center; gap: 10px; width: 100%;
-        }
+        .nav-btn { background: none; border: none; color: #8b949e; padding: 15px; text-align: right; cursor: pointer; font-family: 'Cairo'; font-size: 1rem; border-radius: 8px; transition: 0.3s; display: flex; align-items: center; gap: 10px; width: 100%; }
         .nav-btn:hover, .nav-btn.active { background: #21262d; color: white; }
         .nav-btn.active { border-right: 3px solid var(--neon-green); }
-
-        /* منطقة المحتوى */
         .content-wrapper { flex: 1; padding: 30px; overflow-y: auto; }
         .tab-content { display: none; animation: fadeIn 0.3s ease; }
         .tab-content.active { display: block; }
-
-        /* قسم الصيانة */
-        .maintenance-card {
-            background: #161b22; padding: 30px; border-radius: 15px; border: 1px solid #30363d;
-            text-align: center; max-width: 500px; margin: 0 auto;
-        }
-        .toggle-switch {
-            position: relative; display: inline-block; width: 60px; height: 34px; margin: 20px 0;
-        }
+        .maintenance-card { background: #161b22; padding: 30px; border-radius: 15px; border: 1px solid #30363d; text-align: center; max-width: 500px; margin: 0 auto; }
+        .toggle-switch { position: relative; display: inline-block; width: 60px; height: 34px; margin: 20px 0; }
         .toggle-switch input { opacity: 0; width: 0; height: 0; }
-        .slider {
-            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #ccc; transition: .4s; border-radius: 34px;
-        }
-        .slider:before {
-            position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px;
-            background-color: white; transition: .4s; border-radius: 50%;
-        }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: var(--neon-green); }
         input:checked + .slider:before { transform: translateX(26px); }
-
-        /* جدول السجلات */
-        .logs-table {
-            width: 100%; border-collapse: collapse; background: #161b22; border-radius: 10px; overflow: hidden;
-        }
-        .logs-table th, .logs-table td {
-            padding: 15px; text-align: right; border-bottom: 1px solid #30363d;
-        }
+        .logs-table { width: 100%; border-collapse: collapse; background: #161b22; border-radius: 10px; overflow: hidden; }
+        .logs-table th, .logs-table td { padding: 15px; text-align: right; border-bottom: 1px solid #30363d; }
         .logs-table th { background: #21262d; color: var(--neon-green); }
-        
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* نفس تنسيقات الفورم القديمة */
         .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        @media (max-width: 768px) {
-            .dashboard-container { flex-direction: column; }
-            .sidebar-admin { width: 100%; border-left: none; border-bottom: 1px solid #30363d; }
-            .admin-grid { grid-template-columns: 1fr; }
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @media (max-width: 768px) { .dashboard-container { flex-direction: column; } .sidebar-admin { width: 100%; border-left: none; border-bottom: 1px solid #30363d; } .admin-grid { grid-template-columns: 1fr; } .admin-title { font-size: 2.5rem; } }
     </style>
 </head>
 <body>
 
     <div id="loginOverlay">
+        <div class="admin-title">ONLY ADMIN</div>
+        
         <div class="login-box">
-            <img src="https://cdn.discordapp.com/attachments/1436149485167185940/1454355201539702905/logo.png" width="80" style="margin-bottom:20px;">
-            <h2>تسجيل الدخول للأدمن</h2>
-            <p style="color:#888;">يجب أن تمتلك صلاحية للوصول</p>
+            <img src="https://cdn.discordapp.com/attachments/1436149485167185940/1454355201539702905/logo.png" width="80" style="margin-bottom:20px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));">
+            <h3 style="margin-bottom: 5px;">لوحة التحكم</h3>
+            <p style="color:#888; font-size:0.9rem;">منطقة محظورة للمصرح لهم فقط</p>
+            
             <button class="google-btn" onclick="loginWithGoogle()">
-                <i class="fa-brands fa-google"></i> تسجيل الدخول بجوجل
+                <i class="fa-brands fa-google" style="color:#db4437;"></i> تسجيل الدخول
             </button>
-            <p id="loginError" style="color:#da3633; margin-top:10px; display:none;"></p>
+            <p id="loginError" style="color:#da3633; margin-top:15px; display:none; font-weight:bold;"></p>
         </div>
     </div>
 
@@ -146,26 +162,26 @@
                 <div class="admin-grid">
                     <div class="admin-panel" style="background:#161b22; padding:20px; border-radius:15px; border:1px solid #30363d;">
                         <div class="form-group">
-                            <label>يوزر كيك</label>
+                            <label style="display:block; color:#8b949e; margin-bottom:5px;">يوزر كيك</label>
                             <div style="display:flex; gap:5px;">
                                 <input type="text" id="inpUsername" placeholder="xqc" oninput="updatePreview()" style="width:100%; padding:10px; background:#0d1117; color:white; border:1px solid #30363d; border-radius:5px;">
-                                <button onclick="autoFetchData()" style="background:var(--neon-purple); border:none; color:white; border-radius:5px; width:60px;">جلب</button>
+                                <button onclick="autoFetchData()" style="background:var(--neon-purple); border:none; color:white; border-radius:5px; width:60px; cursor:pointer;">جلب</button>
                             </div>
                         </div>
                         <div class="form-group" style="margin-top:10px;">
-                            <label>الاسم</label>
+                            <label style="display:block; color:#8b949e; margin-bottom:5px;">الاسم</label>
                             <input type="text" id="inpName" oninput="updatePreview()" style="width:100%; padding:10px; background:#0d1117; color:white; border:1px solid #30363d; border-radius:5px;">
                         </div>
                         <div class="form-group" style="margin-top:10px;">
-                            <label>الشخصية (IC)</label>
+                            <label style="display:block; color:#8b949e; margin-bottom:5px;">الشخصية (IC)</label>
                             <input type="text" id="inpICName" oninput="updatePreview()" style="width:100%; padding:10px; background:#0d1117; color:white; border:1px solid #30363d; border-radius:5px;">
                         </div>
                         <div class="form-group" style="margin-top:10px;">
-                            <label>الصورة</label>
+                            <label style="display:block; color:#8b949e; margin-bottom:5px;">الصورة</label>
                             <input type="text" id="inpImage" oninput="updatePreview()" style="width:100%; padding:10px; background:#0d1117; color:white; border:1px solid #30363d; border-radius:5px;">
                         </div>
                         <div class="form-group" style="margin-top:10px;">
-                            <label>الفئة</label>
+                            <label style="display:block; color:#8b949e; margin-bottom:5px;">الفئة</label>
                             <select id="inpCategory" onchange="updatePreview()" style="width:100%; padding:10px; background:#0d1117; color:white; border:1px solid #30363d; border-radius:5px;">
                                 <option value="police">الشرطة</option>
                                 <option value="ems">الإسعاف</option>
@@ -213,8 +229,8 @@
             <div id="tab-maintenance" class="tab-content">
                 <div class="maintenance-card">
                     <i class="fa-solid fa-triangle-exclamation" style="font-size:3rem; color:#ffcc00;"></i>
-                    <h2>نظام الصيانة</h2>
-                    <p style="color:#888;">عند تفعيل هذا الوضع، لن يظهر الموقع للزوار وسيتم تحويلهم لصفحة الصيانة.</p>
+                    <h2 style="margin: 15px 0;">نظام الصيانة</h2>
+                    <p style="color:#888;">عند تفعيل هذا الوضع، لن يظهر الموقع للزوار.</p>
                     
                     <label class="toggle-switch">
                         <input type="checkbox" id="maintenanceSwitch" onchange="toggleMaintenance()">
